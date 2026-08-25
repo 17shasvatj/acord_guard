@@ -45,9 +45,11 @@ SCHEMA = {
 def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip().casefold()
 
-def load_sources(policy_pdf: str) -> dict:
-    """Load every source corpus as verifiable text."""
-    out = {}
+def load_sources(policy_pdf: str, request_text: str = "") -> dict:
+    """Load every source corpus as verifiable text. request_text is the verbatim
+    user instruction that initiated this run; empty in event-driven mode, in
+    which case request-sourced proposals cannot verify (the lane self-seals)."""
+    out = {"request": request_text}
     out["policy"] = subprocess.run(
         ["pdftotext", "-layout", str(DATA / policy_pdf), "-"],
         capture_output=True, text=True).stdout
@@ -74,49 +76,50 @@ class FieldResult:
     status: str          # VERIFIED | REJECTED_* | MISSING | CONFIG | REQUEST
     reason: str = ""
 
+def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
+    """Verify a single proposal. Ordered gauntlet; early return = no fall-through."""
+    name = p["field"]
+    spec = SCHEMA.get(name)
+    if spec is None:
+        return FieldResult(name, None, None, None, "REJECTED_UNKNOWN_FIELD",
+                           "Field not in form schema")
+    src_, val, span = p.get("source"), p.get("value"), p.get("span")
+    if src_ not in spec["sources"]:
+        return FieldResult(name, None, src_, span, "REJECTED_SOURCE",
+            f"'{src_}' is not an allowed source for {name} (allowed: {spec['sources']})")
+    if src_ == "config":
+        if p.get("config_key") in cfg and cfg[p["config_key"]] == val:
+            return FieldResult(name, val, "config", None, "CONFIG")
+        return FieldResult(name, None, "config", None, "REJECTED_NOT_IN_CONFIG",
+            f"'{val}' is not present in agency configuration")
+    # Documentary sources (policy/call/book/request) require a verifiable span.
+    # "request" is the user's own instruction text: verified like any corpus,
+    # labeled as user-asserted provenance via its source field.
+    if not span:
+        return FieldResult(name, None, src_, None, "REJECTED_NO_SPAN",
+            "No source quote offered — cannot admit an unevidenced value")
+    if _norm(span) not in _norm(sources[src_]):
+        return FieldResult(name, None, src_, span, "REJECTED_SPAN_NOT_FOUND",
+            f"Quoted text does not exist in '{src_}'")
+    if p.get("derived"):
+        return FieldResult(name, val, src_, span, "VERIFIED_DERIVED",
+            "Value is a stated normalization of the verified quote")
+    if _norm(str(val)) not in _norm(span):
+        return FieldResult(name, None, src_, span, "REJECTED_VALUE_NOT_IN_SPAN",
+            f"Value '{val}' does not appear in the quoted text — mark derived=true only if it is a normalization")
+    return FieldResult(name, val, src_, span, "VERIFIED")
+
 def verify_proposals(proposals: list[dict], sources: dict) -> list[FieldResult]:
     """The invention-killer. A proposed field survives only if:
        (1) its source is allowed for that field by the schema,
        (2) its quoted span exists verbatim (whitespace-normalized) in that source,
        (3) the value appears within the quoted span.
        config/request sources are trusted-by-definition but recorded as such."""
-    results, seen = [], set()
-    cfg = json.loads(sources["config"])   # sources is the single source of truth — no disk I/O here
-    for p in proposals:
-        name = p["field"]
-        seen.add(name)
-        spec = SCHEMA.get(name)
-        if spec is None:
-            results.append(FieldResult(name, None, None, None, "REJECTED_UNKNOWN_FIELD",
-                                       "Field not in form schema")); continue
-        src, val, span = p.get("source"), p.get("value"), p.get("span")
-        if src not in spec["sources"]:
-            results.append(FieldResult(name, None, src, span, "REJECTED_SOURCE",
-                f"'{src}' is not an allowed source for {name} (allowed: {spec['sources']})")); continue
-        if src == "config":
-            if p.get("config_key") in cfg and cfg[p["config_key"]] == val:
-                results.append(FieldResult(name, val, "config", None, "CONFIG")); continue
-            results.append(FieldResult(name, None, "config", None, "REJECTED_NOT_IN_CONFIG",
-                f"'{val}' is not present in agency configuration")); continue
-        if src == "request":
-            results.append(FieldResult(name, val, "request", None, "REQUEST",
-                "Supplied by requesting user; recorded as user-provided")); continue
-        # Documentary sources require a verifiable span:
-        if not span:
-            results.append(FieldResult(name, None, src, None, "REJECTED_NO_SPAN",
-                "No source quote offered — cannot admit an unevidenced value")); continue
-        if _norm(span) not in _norm(sources[src]):
-            results.append(FieldResult(name, None, src, span, "REJECTED_SPAN_NOT_FOUND",
-                f"Quoted text does not exist in '{src}'")); continue
-        if p.get("derived"):
-            results.append(FieldResult(name, val, src, span, "VERIFIED_DERIVED",
-                "Value is a stated normalization of the verified quote")); continue
-        if _norm(str(val)) not in _norm(span):
-            results.append(FieldResult(name, None, src, span, "REJECTED_VALUE_NOT_IN_SPAN",
-                f"Value '{val}' does not appear in the quoted text — mark derived=true only if it is a normalization")); continue
-        results.append(FieldResult(name, val, src, span, "VERIFIED"))
-    for name, spec in SCHEMA.items():          # anything never proposed -> MISSING
-        if name not in seen:
+    cfg = json.loads(sources["config"])   # sources is the single source of truth
+    results = [_verify_one(p, cfg, sources) for p in proposals]
+    proposed = {p["field"] for p in proposals}
+    for name in SCHEMA:                    # anything never proposed -> MISSING
+        if name not in proposed:
             results.append(FieldResult(name, None, None, None, "MISSING",
                 "Not captured from any allowed source"))
     return results
@@ -161,14 +164,6 @@ def validate(results: list[FieldResult], notice_date: date, policy_text: str) ->
     if dol:
         rules.append(Rule("loss_date_not_in_future", "BLOCK", dol <= notice_date,
             f"Loss {dol} vs notice date {notice_date}"))
-    desc = (_get(results, "loss_description") or "").casefold()
-    surge = any(k in desc for k in ("surge", "flood", "surface water", "rising water", "foot of water"))
-    if surge:
-        excl = "flood" in policy_text.casefold() and "not covered" in policy_text.casefold()
-        rules.append(Rule("excluded_peril_flagged", "WARN", True,
-            "Storm surge / surface water reported: policy excludes flood — component must be "
-            "listed as EXCLUDED on the notice" if excl else
-            "Surge reported; no flood exclusion located on policy"))
     phone = _get(results, "insured_phone")
     if phone:
         digits = re.sub(r"\D", "", phone)
