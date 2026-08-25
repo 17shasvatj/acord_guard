@@ -10,16 +10,12 @@ demos, proposals are canned in data/proposals_*.json — including, in the
 fabrication scenario, the exact classes of invention observed in GailGPT's
 output (invented phone, producer code, transplanted zip, unstated time).
 """
+from __future__ import annotations
+
 import json, sys
 from datetime import date
 from pathlib import Path
 from engine import load_sources, verify_proposals, validate, decide, SCHEMA, FieldResult
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-
 HERE = Path(__file__).parent
 OUT = HERE / "out"; OUT.mkdir(exist_ok=True)
 NOTICE_DATE = date(2026, 8, 24)
@@ -30,51 +26,34 @@ SCEN = {
     "clean":       dict(policy="policy_delgado_2026.pdf", proposals="proposals_clean.json"),
 }
 
-def render_form(results, rules, status, path):
-    styles = getSampleStyleSheet()
-    NAVY = colors.HexColor("#1F3B5B")
-    h = ParagraphStyle("h", parent=styles["Title"], fontName="Helvetica-Bold",
-                       fontSize=13, textColor=NAVY, spaceAfter=2)
-    small = ParagraphStyle("s", parent=styles["Normal"], fontSize=8, leading=10)
-    doc = SimpleDocTemplate(str(path), pagesize=letter, topMargin=0.6*inch, bottomMargin=0.6*inch)
-    st = [Paragraph("PROPERTY LOSS NOTICE — ACORD 1 layout (prototype reproduction)", h),
-          Paragraph(f"Status: <b>{status}</b> &nbsp;|&nbsp; Notice date {NOTICE_DATE} &nbsp;|&nbsp; "
-                    "Every field below is traceable — see audit manifest", small),
-          HRFlowable(width="100%", color=NAVY), Spacer(1, 6)]
-    rows = [["Field", "Value", "Provenance"]]
-    for r in sorted(results, key=lambda x: list(SCHEMA).index(x.name)):
-        if r.value is not None:
-            prov = {"VERIFIED": f"verified quote in {r.source}",
-                    "VERIFIED_DERIVED": f"derived from verified quote in {r.source}",
-                    "CONFIG": "agency configuration",
-                    "REQUEST": "user-supplied (recorded)"}[r.status]
-            rows.append([r.name, str(r.value), prov])
-        elif SCHEMA[r.name]["required"]:
-            rows.append([r.name, "** REQUIRED — NOT CAPTURED **", "submission held"])
-        else:
-            rows.append([r.name, "NOT CAPTURED", "left blank — never guessed"])
-    t = Table(rows, colWidths=[1.6*inch, 3.4*inch, 2.0*inch])
-    t.setStyle(TableStyle([
-        ("FONT", (0,0), (-1,-1), "Helvetica", 8),
-        ("FONT", (0,0), (-1,0), "Helvetica-Bold", 8),
-        ("BACKGROUND", (0,0), (-1,0), NAVY), ("TEXTCOLOR", (0,0), (-1,0), colors.white),
-        ("ROWBACKGROUNDS", (0,1), (-1,-1), [colors.white, colors.HexColor("#EEF1F5")]),
-        ("GRID", (0,0), (-1,-1), 0.4, colors.HexColor("#CCCCCC")),
-        ("VALIGN", (0,0), (-1,-1), "TOP")]))
-    st.append(t); st.append(Spacer(1, 8))
-    st.append(Paragraph("Validation results", h))
-    for ru in rules:
-        mark = "PASS" if ru.passed else f"{ru.severity} FAILED"
-        st.append(Paragraph(f"<b>[{mark}]</b> {ru.name} — {ru.detail}", small))
-    doc.build(st)
-
-def main(scenario):
-    cfg = SCEN[scenario]
-    sources = load_sources(cfg["policy"])
-    proposals = json.loads((HERE / "data" / cfg["proposals"]).read_text())
+def run(policy_pdf: str, proposals: list, request_text: str = ""):
+    """Single entry point for the whole pipeline: verify -> validate -> decide.
+    Used by the scenario CLI, the extractor, and the (future) service."""
+    sources = load_sources(policy_pdf, request_text)
     results = verify_proposals(proposals, sources)
     rules = validate(results, NOTICE_DATE, sources["policy"])
     status, missing, rejected, blocks = decide(results, rules)
+    return sources, results, rules, status, missing, rejected, blocks
+
+
+def write_outputs(results, rules, status, tag: str):
+    """Render the notice PDF + audit manifest for any run (scenario or live)."""
+    manifest = {
+        "run": tag, "notice_date": str(NOTICE_DATE), "decision": status,
+        "fields": [vars(r) for r in results], "validations": [vars(ru) for ru in rules]}
+    mpath = OUT / f"manifest_{tag}.json"
+    mpath.write_text(json.dumps(manifest, indent=2))
+    fpath = OUT / f"loss_notice_{tag}.pdf"
+    import form_render
+    form_render.render(results, rules, status, fpath)
+    print(f"\nWrote: {fpath.name}, {mpath.name}")
+    return fpath, mpath
+
+
+def main(scenario):
+    cfg = SCEN[scenario]
+    proposals = json.loads((HERE / "data" / cfg["proposals"]).read_text())
+    sources, results, rules, status, missing, rejected, blocks = run(cfg["policy"], proposals)
 
     print(f"\n=== SCENARIO: {scenario} | policy: {cfg['policy']} ===")
     print(f"DECISION: {status}")
@@ -88,14 +67,7 @@ def main(scenario):
         print("\nValidation BLOCKS:")
         for b in blocks: print(f"  - {b.name}: {b.detail}")
 
-    manifest = {
-        "scenario": scenario, "notice_date": str(NOTICE_DATE), "decision": status,
-        "fields": [vars(r) for r in results], "validations": [vars(ru) for ru in rules]}
-    mpath = OUT / f"manifest_{scenario}.json"
-    mpath.write_text(json.dumps(manifest, indent=2))
-    fpath = OUT / f"loss_notice_{scenario}.pdf"
-    render_form(results, rules, status, fpath)
-    print(f"\nWrote: {fpath.name}, {mpath.name}")
+    write_outputs(results, rules, status, scenario)
 
 if __name__ == "__main__":
     main(sys.argv[1] if len(sys.argv) > 1 else "clean")

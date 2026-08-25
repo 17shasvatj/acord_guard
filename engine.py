@@ -6,10 +6,14 @@ source document and contains the value. Missing fields are flagged, never
 guessed. Deterministic rules validate the assembled record before any form
 is rendered. Output includes a field-by-field audit manifest.
 """
-import json, re, subprocess
+from __future__ import annotations
+
+import json, re
 from dataclasses import dataclass, field as dfield
 from datetime import datetime, date
 from pathlib import Path
+
+from pypdf import PdfReader
 
 DATA = Path(__file__).parent / "data"
 
@@ -50,9 +54,8 @@ def load_sources(policy_pdf: str, request_text: str = "") -> dict:
     user instruction that initiated this run; empty in event-driven mode, in
     which case request-sourced proposals cannot verify (the lane self-seals)."""
     out = {"request": request_text}
-    out["policy"] = subprocess.run(
-        ["pdftotext", "-layout", str(DATA / policy_pdf), "-"],
-        capture_output=True, text=True).stdout
+    out["policy"] = "\n".join(
+        page.extract_text() or "" for page in PdfReader(DATA / policy_pdf).pages)
     out["call"] = (DATA / "claims_call_transcript.txt").read_text()
     import pandas as pd
     book = pd.read_excel(DATA / "agency_book.xlsx", sheet_name="Book of Business")
@@ -138,29 +141,43 @@ def _get(results, name):
             return r.value
     return None
 
+DATE_FORMATS = ("%m/%d/%Y", "%B %d, %Y", "%b %d, %Y", "%Y-%m-%d", "%d %B %Y")
+
+def _parse_date(raw: str):
+    for fmt in DATE_FORMATS:
+        try:
+            return datetime.strptime(raw.strip(), fmt).date()
+        except ValueError:
+            pass
+    return None
+
 def _parse_term(term: str):
-    m = re.search(r"(\d{2}/\d{2}/\d{4})\s*to\s*(\d{2}/\d{2}/\d{4})", term or "")
-    if not m: return None, None
-    f = lambda s: datetime.strptime(s, "%m/%d/%Y").date()
-    return f(m.group(1)), f(m.group(2))
+    # tolerate "to", "through", hyphen, en/em dash between the two dates
+    m = re.search(r"(\d{1,2}/\d{1,2}/\d{4})\s*(?:to|through|[-\u2013\u2014])\s*(\d{1,2}/\d{1,2}/\d{4})",
+                  term or "")
+    if not m:
+        return None, None
+    return _parse_date(m.group(1)), _parse_date(m.group(2))
 
 def validate(results: list[FieldResult], notice_date: date, policy_text: str) -> list[Rule]:
     rules = []
     term = _get(results, "policy_term")
     dol_raw = _get(results, "date_of_loss")
-    dol = None
-    if dol_raw:
-        for fmt in ("%m/%d/%Y", "%B %d, %Y", "%Y-%m-%d"):
-            try: dol = datetime.strptime(dol_raw, fmt).date(); break
-            except ValueError: pass
+    dol = _parse_date(dol_raw) if dol_raw else None
     start, end = _parse_term(term)
     if dol and start and end:
         ok = start <= dol <= end
         rules.append(Rule("loss_date_within_policy_term", "BLOCK", ok,
             f"Loss {dol} vs term {start}–{end}" + ("" if ok else " — LOSS OUTSIDE POLICY PERIOD")))
     else:
+        # Fail closed, but say exactly what failed — a generic shrug is undiagnosable.
+        problems = []
+        if not dol_raw: problems.append("loss date not captured")
+        elif not dol:   problems.append(f"loss date unparseable: '{dol_raw}'")
+        if not term:            problems.append("policy term not captured")
+        elif not (start and end): problems.append(f"policy term unparseable: '{term}'")
         rules.append(Rule("loss_date_within_policy_term", "BLOCK", False,
-            "Cannot evaluate — loss date or policy term not verifiably captured"))
+            "Cannot evaluate — " + "; ".join(problems)))
     if dol:
         rules.append(Rule("loss_date_not_in_future", "BLOCK", dol <= notice_date,
             f"Loss {dol} vs notice date {notice_date}"))

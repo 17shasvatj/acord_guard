@@ -20,20 +20,48 @@ Usage:
 Raw HTTP (requests) on purpose — no SDKs, fewer deps, and the transport is
 inspectable. Model ids are flags, not constants, because they go stale.
 """
-import argparse, json, os, re, sys
+from __future__ import annotations
+
+import argparse, json, os, re, sys, time
 from pathlib import Path
 
 import requests
+
+RETRYABLE = (429, 500, 502, 503, 504)
+
+
+def _request(method, url, *, attempts=4, **kw):
+    """HTTP with exponential backoff on transient failures, and real error
+    bodies on permanent ones. Keys travel in headers, never in URLs — so
+    tracebacks and logs can't leak credentials."""
+    for i in range(attempts):
+        try:
+            r = requests.request(method, url, timeout=TIMEOUT, **kw)
+        except requests.RequestException as e:
+            if i == attempts - 1:
+                raise
+            wait = 2 ** i
+            print(f"[retry] {type(e).__name__}, waiting {wait}s...")
+            time.sleep(wait)
+            continue
+        if r.status_code in RETRYABLE and i < attempts - 1:
+            wait = 2 ** i
+            print(f"[retry] HTTP {r.status_code}, waiting {wait}s...")
+            time.sleep(wait)
+            continue
+        if not r.ok:
+            sys.exit(f"HTTP {r.status_code} from {url.split('?')[0]}: {r.text[:500]}")
+        return r.json()
 
 from engine import SCHEMA, load_sources
 import pipeline
 
 HERE = Path(__file__).parent
 TIMEOUT = 60
-# Defaults are the newest ids known-good at build time. Gail's exhibits used its
-# "Opus 5" / "Gemini 3.7 Flash" picker tiers; discover the exact API ids your
-# keys expose with --list-models and pass --model to match the exhibits.
-DEFAULT_MODELS = {"flash": "gemini-flash-latest", "opus": "claude-opus-4-8"}
+# Opus id confirmed via --list-models against a live key (matches the "Opus 5"
+# tier used in the GailGPT exhibits). Flash id is an alias — if your key's list
+# names it differently, pass --model. Re-verify with --list-models when stale.
+DEFAULT_MODELS = {"flash": "gemini-flash-latest", "opus": "claude-opus-5"}
 
 PROMPT = """You extract fields for an ACORD Property Loss Notice.
 
@@ -53,6 +81,8 @@ Hard rules:
   differ; wording may not).
 - "request" refers to the user request text included below; it is a quotable
   source like any other.
+- Value formats: dates as MM/DD/YYYY; policy_term exactly as printed on the
+  policy (e.g. "03/15/2025 to 03/15/2026").
 
 Schema (field -> allowed sources):
 {schema}
@@ -74,14 +104,11 @@ def call_flash(prompt: str, model: str) -> str:
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         sys.exit("GEMINI_API_KEY not set — get one at aistudio.google.com")
-    r = requests.post(
+    data = _request("POST",
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-        params={"key": key},
+        headers={"x-goog-api-key": key},
         json={"contents": [{"parts": [{"text": prompt}]}],
-              "generationConfig": {"temperature": 0}},
-        timeout=TIMEOUT)
-    r.raise_for_status()
-    data = r.json()
+              "generationConfig": {"temperature": 0}})
     return "".join(part.get("text", "")
                    for part in data["candidates"][0]["content"]["parts"])
 
@@ -90,15 +117,13 @@ def call_opus(prompt: str, model: str) -> str:
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         sys.exit("ANTHROPIC_API_KEY not set — get one at console.anthropic.com")
-    r = requests.post(
+    data = _request("POST",
         "https://api.anthropic.com/v1/messages",
         headers={"x-api-key": key, "anthropic-version": "2023-06-01",
                  "content-type": "application/json"},
-        json={"model": model, "max_tokens": 4000, "temperature": 0,
-              "messages": [{"role": "user", "content": prompt}]},
-        timeout=TIMEOUT)
-    r.raise_for_status()
-    data = r.json()
+        json={"model": model, "max_tokens": 4000,
+              # no temperature: deprecated on claude-opus-5 (API rejects it)
+              "messages": [{"role": "user", "content": prompt}]})
     return "".join(block.get("text", "") for block in data["content"])
 
 
@@ -127,19 +152,17 @@ def list_models(provider: str):
     from ground truth instead of guessing strings that go stale."""
     if provider == "opus":
         key = os.environ.get("ANTHROPIC_API_KEY") or sys.exit("ANTHROPIC_API_KEY not set")
-        r = requests.get("https://api.anthropic.com/v1/models",
-                         headers={"x-api-key": key, "anthropic-version": "2023-06-01"},
-                         timeout=TIMEOUT)
-        r.raise_for_status()
-        for m in r.json().get("data", []):
+        data = _request("GET", "https://api.anthropic.com/v1/models",
+                        headers={"x-api-key": key, "anthropic-version": "2023-06-01"})
+        for m in data.get("data", []):
             print(m.get("id"))
     elif provider == "flash":
         key = os.environ.get("GEMINI_API_KEY") or sys.exit("GEMINI_API_KEY not set")
-        r = requests.get("https://generativelanguage.googleapis.com/v1beta/models",
-                         params={"key": key}, timeout=TIMEOUT)
-        r.raise_for_status()
-        for m in r.json().get("models", []):
-            print(m.get("name", "").removeprefix("models/"))
+        data = _request("GET", "https://generativelanguage.googleapis.com/v1beta/models",
+                        headers={"x-goog-api-key": key})
+        for m in data.get("models", []):
+            name = m.get("name", "")
+            print(name[7:] if name.startswith("models/") else name)   # py3.8: no removeprefix
     else:
         sys.exit("--list-models requires --provider flash|opus")
 
@@ -173,7 +196,8 @@ def main():
         proposals = parse_proposals(raw)
         print(f"[{args.provider}] parsed {len(proposals)} proposals")
 
-    out = Path(args.out) if args.out else HERE / "data" / f"proposals_live_{args.provider}.json"
+    out = Path(args.out) if args.out else (
+        HERE / "data" / f"proposals_live_{args.provider}_{Path(args.policy).stem}.json")
     out.write_text(json.dumps(proposals, indent=1))
     print(f"wrote {out}")
 
@@ -188,6 +212,9 @@ def main():
         for ru in rules:
             mark = "PASS" if ru.passed else f"{ru.severity} FAIL"
             print(f"  [{mark}] {ru.name} — {ru.detail}")
+        # Documents, not log lines: every live run emits its exhibit.
+        pipeline.write_outputs(results, rules, status,
+                               f"live_{args.provider}_{Path(args.policy).stem}")
 
 
 if __name__ == "__main__":
