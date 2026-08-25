@@ -1,0 +1,100 @@
+[
+ {
+  "field": "producer_name",
+  "source": "config",
+  "config_key": "agency_name",
+  "value": "Paws and Provisions LLC"
+ },
+ {
+  "field": "insured_name",
+  "source": "policy",
+  "value": "Paws and Provisions LLC",
+  "span": "Named Insured: Paws and Provisions LLC"
+ },
+ {
+  "field": "insured_address",
+  "source": "policy",
+  "value": "6469 Applegate Drive, San Jose, CA 95119",
+  "span": "Mailing Address: 6469 Applegate Drive, San Jose, CA 95119"
+ },
+ {
+  "field": "policy_number",
+  "source": "policy",
+  "value": "BOP-HTF-1010",
+  "span": "Policy Number: BOP-HTF-1010"
+ },
+ {
+  "field": "policy_term",
+  "source": "policy",
+  "value": "01/22/2026 to 01/22/2027",
+  "span": "Policy Period: 01/22/2026 to 01/22/2027"
+ },
+ {
+  "field": "cert_holder",
+  "source": "request",
+  "value": "Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131",
+  "span": "Certificate holder: Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131"
+ },
+ {
+  "field": "each_occurrence",
+  "source": "policy",
+  "value": "$1,000,000",
+  "span": "Each Occurrence: $1,000,000"
+ },
+ {
+  "field": "general_aggregate",
+  "source": "policy",
+  "value": "$2,000,000",
+  "span": "General Aggregate: $2,000,000"
+ },
+ {
+  "field": "products_aggregate",
+  "source": "policy",
+  "value": "$2,000,000",
+  "span": "Products/Completed Operations Aggregate: $2,000,000"
+ },
+ {
+  "field": "personal_adv_injury",
+  "source": "policy",
+  "value": "$1,000,000",
+  "span": "Personal & Advertising Injury: $1,000,000"
+ },
+ {
+  "field": "damage_rented",
+  "source": "policy",
+  "value": "$100,000",
+  "span": "Damage to Rented Premises: $100,000"
+ },
+ {
+  "field": "med_expense",
+  "source": "policy",
+  "value": "$5,000",
+  "span": "Medical Expense (any one person): $5,000"
+ },
+ {
+  "field": "carrier",
+  "source": "policy",
+  "value": "Hartford Fire Insurance Company NAIC #19682",
+  "span": "Carrier: The Hartford"
+ },
+ {
+  "field": "producer_code",
+  "source": "config",
+  "config_key": "producer_code",
+  "value": "AGY-P&P-01"
+ },
+ {
+  "field": "additional_insured",
+  "source": "policy",
+  "value": "Y",
+  "span": "No additional-insured endorsement on file. No waiver of subrogation on file.",
+  "derived": true
+ },
+ {
+  "field": "waiver_subrogation",
+  "source": "policy",
+  "value": "Y",
+  "span": "No additional-insured endorsement on file. No waiver of subrogation on file.",
+  "derived": true
+ }
+]

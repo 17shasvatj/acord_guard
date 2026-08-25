@@ -18,12 +18,12 @@ from pathlib import Path
 from engine import load_sources, verify_proposals, validate, decide, SCHEMA, FieldResult
 HERE = Path(__file__).parent
 OUT = HERE / "out"; OUT.mkdir(exist_ok=True)
-NOTICE_DATE = date(2026, 8, 24)
+NOTICE_DATE = date(2026, 8, 25)
 
 SCEN = {
-    "fabrication": dict(policy="policy_delgado_2026.pdf", proposals="proposals_fabrication.json"),
-    "expired":     dict(policy="policy_delgado_expired.pdf", proposals="proposals_expired.json"),
-    "clean":       dict(policy="policy_delgado_2026.pdf", proposals="proposals_clean.json"),
+    "fabrication": dict(policy="coi_policy_inforce.pdf", proposals="coi_proposals_fabrication.json"),
+    "expired":     dict(policy="coi_policy_expired.pdf", proposals="coi_proposals_expired.json"),
+    "clean":       dict(policy="coi_policy_inforce.pdf", proposals="coi_proposals_clean.json"),
 }
 
 def run(policy_pdf: str, proposals: list, request_text: str = ""):

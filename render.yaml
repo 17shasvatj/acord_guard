@@ -1,0 +1,16 @@
+# Render backend service. Point Render at your GitHub repo; it reads this file.
+services:
+  - type: web
+    name: acord-guard-api
+    runtime: python
+    plan: starter          # $7/mo, always-on (no cold starts during the demo window).
+                           # use "free" to avoid cost, but expect ~45s cold start after idle.
+    buildCommand: "pip install -r requirements.txt && python build_corpus.py"
+    startCommand: "uvicorn service:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false        # set the value in the Render dashboard, never in the repo
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11.9"    # modern Python — no 3.8 shims needed on the server

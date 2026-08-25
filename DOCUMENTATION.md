@@ -55,7 +55,7 @@ verifier makes its honesty irrelevant.
 acord_guard/
 ├── engine.py               # Core library: schema, sources, verifier, validators, decision
 ├── pipeline.py             # Scenario runner (CLI), form renderer, manifest writer
-├── extract_live.py         # LLM extractor seam (written, NOT yet run; Anthropic-only)
+├── extractor.py            # Two-provider LLM extractor (flash/opus/mock) + CLI
 ├── README.md               # Evidence summary + findings→components mapping
 ├── DOCUMENTATION.md        # This file
 ├── data/
@@ -72,8 +72,10 @@ acord_guard/
     └── manifest_{scenario}.json    # Audit manifest per scenario
 ```
 
-Dependencies: `pandas`, `openpyxl`, `reportlab`, `pdftotext` (poppler-utils);
-`anthropic` only for the unrun live extractor.
+Dependencies: `pip install -r requirements.txt` — pure pip (`pandas`, `openpyxl`,
+`reportlab`, `pypdf`, `requests`), no system packages, no compilers. Runs on
+Python 3.8+ via compat shims, but **3.10+ recommended** (3.8 is EOL and has
+required three workarounds: postponed annotations, removeprefix, an md5 kwarg).
 
 Run: `python pipeline.py fabrication|expired|clean`
 
@@ -283,10 +285,11 @@ has no valid span and cannot survive.
 
 ## 5. Seams — designed, documented, not yet built
 
-1. **Live extraction** (`extract_live.py`): written, **never executed** (needs
-   an API key), Anthropic-only. Planned: a two-provider version (Gemini Flash +
-   Anthropic top tier) emitting the same contract — this powers the demo's tier
-   toggle. Until run, all pipeline results use the canned proposal sets.
+1. **Live extraction** (`extractor.py`): two providers (Gemini Flash /
+   Anthropic top tier) via raw REST, strict contract parsing (malformed output
+   fails loudly), plus a `mock` provider for offline runs. Full CLI-to-verdict
+   path tested with mock; the two HTTP calls themselves are untested until run
+   with real keys (`GEMINI_API_KEY` / `ANTHROPIC_API_KEY`).
 2. **Official ACORD 1 fill**: the renderer is a layout reproduction; the seam
    is form-filling the official fillable PDF from the same validated record
    (same approach as Gail's own COI script — pypdf over AcroForm fields).

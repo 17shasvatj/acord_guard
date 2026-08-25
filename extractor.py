@@ -15,7 +15,7 @@ extractor's only jobs are (1) a faithful prompt, (2) robust transport, and
 Usage:
     python extractor.py --provider flash --run
     python extractor.py --provider opus  --policy policy_delgado_expired.pdf --run
-    python extractor.py --provider mock  --mock-file data/proposals_fabrication.json --run
+    python extractor.py --provider mock  --mock-file data/coi_proposals_fabrication.json --run
 
 Raw HTTP (requests) on purpose — no SDKs, fewer deps, and the transport is
 inspectable. Model ids are flags, not constants, because they go stale.
@@ -30,7 +30,7 @@ import requests
 RETRYABLE = (429, 500, 502, 503, 504)
 
 
-def _request(method, url, *, attempts=4, **kw):
+def _request(method, url, *, attempts=4, on_event=None, **kw):
     """HTTP with exponential backoff on transient failures, and real error
     bodies on permanent ones. Keys travel in headers, never in URLs — so
     tracebacks and logs can't leak credentials."""
@@ -42,15 +42,17 @@ def _request(method, url, *, attempts=4, **kw):
                 raise
             wait = 2 ** i
             print(f"[retry] {type(e).__name__}, waiting {wait}s...")
+            if on_event: on_event({"type": "retry", "reason": type(e).__name__, "wait": wait})
             time.sleep(wait)
             continue
         if r.status_code in RETRYABLE and i < attempts - 1:
             wait = 2 ** i
             print(f"[retry] HTTP {r.status_code}, waiting {wait}s...")
+            if on_event: on_event({"type": "retry", "reason": f"HTTP {r.status_code}", "wait": wait})
             time.sleep(wait)
             continue
         if not r.ok:
-            sys.exit(f"HTTP {r.status_code} from {url.split('?')[0]}: {r.text[:500]}")
+            raise RuntimeError(f"HTTP {r.status_code} from {url.split('?')[0]}: {r.text[:500]}")
         return r.json()
 
 from engine import SCHEMA, load_sources
@@ -63,7 +65,7 @@ TIMEOUT = 60
 # names it differently, pass --model. Re-verify with --list-models when stale.
 DEFAULT_MODELS = {"flash": "gemini-flash-latest", "opus": "claude-opus-5"}
 
-PROMPT = """You extract fields for an ACORD Property Loss Notice.
+PROMPT = """You extract fields for an ACORD 25 Certificate of Insurance.
 
 Return ONLY a JSON array of proposals, no prose, no markdown fences. Each proposal:
   {{"field": <schema field>, "value": <the value>, "source": <one allowed source>,
@@ -73,16 +75,14 @@ Return ONLY a JSON array of proposals, no prose, no markdown fences. Each propos
     "config_key": <key name>  (ONLY for source "config")}}
 
 Hard rules:
-- NEVER propose a value without a verbatim quote from the named source
-  (config proposals use config_key instead of a quote).
-- If a field is not present in any source, OMIT it entirely. Do not guess,
-  do not use placeholder values, do not draw on outside knowledge.
+- For each value, include the span: the verbatim quote from the named source
+  that supports it (config proposals use config_key instead of a quote).
+- Fill every field on the certificate that you can.
 - Quotes must be copied exactly from the source text below (whitespace may
   differ; wording may not).
 - "request" refers to the user request text included below; it is a quotable
   source like any other.
-- Value formats: dates as MM/DD/YYYY; policy_term exactly as printed on the
-  policy (e.g. "03/15/2025 to 03/15/2026").
+- Value formats: policy_term exactly as printed (e.g. "01/22/2026 to 01/22/2027").
 
 Schema (field -> allowed sources):
 {schema}
@@ -100,12 +100,13 @@ def build_prompt(sources: dict) -> str:
 
 # ---------------------------- Providers --------------------------------------
 
-def call_flash(prompt: str, model: str) -> str:
+def call_flash(prompt: str, model: str, on_event=None) -> str:
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
-        sys.exit("GEMINI_API_KEY not set — get one at aistudio.google.com")
+        raise RuntimeError("GEMINI_API_KEY not set — get one at aistudio.google.com")
     data = _request("POST",
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+        on_event=on_event,
         headers={"x-goog-api-key": key},
         json={"contents": [{"parts": [{"text": prompt}]}],
               "generationConfig": {"temperature": 0}})
@@ -113,12 +114,13 @@ def call_flash(prompt: str, model: str) -> str:
                    for part in data["candidates"][0]["content"]["parts"])
 
 
-def call_opus(prompt: str, model: str) -> str:
+def call_opus(prompt: str, model: str, on_event=None) -> str:
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
-        sys.exit("ANTHROPIC_API_KEY not set — get one at console.anthropic.com")
+        raise RuntimeError("ANTHROPIC_API_KEY not set — get one at console.anthropic.com")
     data = _request("POST",
         "https://api.anthropic.com/v1/messages",
+        on_event=on_event,
         headers={"x-api-key": key, "anthropic-version": "2023-06-01",
                  "content-type": "application/json"},
         json={"model": model, "max_tokens": 4000,
@@ -145,19 +147,29 @@ def parse_proposals(text: str) -> list[dict]:
     return items
 
 
+def extract(provider: str, sources: dict, model: str | None = None, on_event=None):
+    """Programmatic extraction for the service: returns (proposals, model_used)."""
+    model = model or DEFAULT_MODELS[provider]
+    prompt = build_prompt(sources)
+    raw = (call_flash if provider == "flash" else call_opus)(prompt, model, on_event=on_event)
+    return parse_proposals(raw), model
+
+
 # ---------------------------- CLI --------------------------------------------
 
 def list_models(provider: str):
     """Enumerate model ids visible to your key — pick the top-tier / flash ids
     from ground truth instead of guessing strings that go stale."""
     if provider == "opus":
-        key = os.environ.get("ANTHROPIC_API_KEY") or sys.exit("ANTHROPIC_API_KEY not set")
+        key = os.environ.get("ANTHROPIC_API_KEY")
+        if not key: raise RuntimeError("ANTHROPIC_API_KEY not set")
         data = _request("GET", "https://api.anthropic.com/v1/models",
                         headers={"x-api-key": key, "anthropic-version": "2023-06-01"})
         for m in data.get("data", []):
             print(m.get("id"))
     elif provider == "flash":
-        key = os.environ.get("GEMINI_API_KEY") or sys.exit("GEMINI_API_KEY not set")
+        key = os.environ.get("GEMINI_API_KEY")
+        if not key: raise RuntimeError("GEMINI_API_KEY not set")
         data = _request("GET", "https://generativelanguage.googleapis.com/v1beta/models",
                         headers={"x-goog-api-key": key})
         for m in data.get("models", []):
@@ -173,9 +185,9 @@ def main():
     ap.add_argument("--list-models", action="store_true",
                     help="print model ids visible to your key, then exit")
     ap.add_argument("--model", help="override the provider's default model id")
-    ap.add_argument("--policy", default="policy_delgado_2026.pdf")
-    ap.add_argument("--request", default="Generate a Property Loss Notice for Maria Delgado's hurricane claim, loss date August 22.")
-    ap.add_argument("--mock-file", default="data/proposals_clean.json")
+    ap.add_argument("--policy", default="coi_policy_inforce.pdf")
+    ap.add_argument("--request", default="")  # empty -> load_sources falls back to coi_request.txt
+    ap.add_argument("--mock-file", default="data/coi_proposals_clean.json")
     ap.add_argument("--out", help="write proposals here (default: data/proposals_live_<provider>.json)")
     ap.add_argument("--run", action="store_true", help="run verify->validate->decide on the proposals")
     args = ap.parse_args()
@@ -218,4 +230,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as e:
+        sys.exit(str(e))

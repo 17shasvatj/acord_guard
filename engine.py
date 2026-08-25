@@ -1,4 +1,4 @@
-"""ACORD Guard — governance engine for claims-document generation.
+"""ACORD Guard — governance engine for certificate-of-insurance generation (ACORD 25).
 
 Principle: the model proposes; deterministic code disposes.
 Every field must carry a source quote that VERIFIABLY exists in an allowed
@@ -25,24 +25,25 @@ DATA = Path(__file__).parent / "data"
 #   config  = agency configuration (trusted, no span needed)
 #   request = supplied explicitly by the requesting user (recorded as such)
 SCHEMA = {
-    "agency_name":     {"required": True,  "sources": ["config"]},
-    "agency_address":  {"required": True,  "sources": ["config"]},
-    "agency_phone":    {"required": True,  "sources": ["config"]},
-    "insured_name":    {"required": True,  "sources": ["policy", "book", "call"]},
-    "insured_address": {"required": True,  "sources": ["policy", "call"]},
-    "insured_phone":   {"required": True,  "sources": ["call", "book"]},
-    "carrier":         {"required": True,  "sources": ["policy", "book"]},
-    "policy_number":   {"required": True,  "sources": ["policy", "book"]},
-    "policy_term":     {"required": True,  "sources": ["policy"]},
-    "date_of_loss":    {"required": True,  "sources": ["call", "request"]},
-    "time_of_loss":    {"required": False, "sources": ["call"]},
-    "peril":           {"required": True,  "sources": ["call", "request"]},
-    "loss_description":{"required": True,  "sources": ["call"]},
-    "deductible":      {"required": True,  "sources": ["policy"]},
-    "coverage_a":      {"required": True,  "sources": ["policy"]},
-    "prior_claims":    {"required": False, "sources": ["book"]},
-    "producer_code":   {"required": False, "sources": ["config"]},   # NOT in config -> must stay blank
-    "insured_email":   {"required": False, "sources": ["call", "book"]},
+    "producer_name":    {"required": True,  "sources": ["config"]},
+    "producer_address": {"required": True,  "sources": ["config"]},
+    "producer_phone":   {"required": True,  "sources": ["config"]},
+    "insured_name":     {"required": True,  "sources": ["policy"]},
+    "insured_address":  {"required": True,  "sources": ["policy"]},
+    "carrier":          {"required": True,  "sources": ["policy"]},
+    "policy_number":    {"required": True,  "sources": ["policy"]},
+    "policy_term":      {"required": True,  "sources": ["policy"]},
+    "cert_holder":      {"required": True,  "sources": ["request"]},
+    "each_occurrence":  {"required": True,  "sources": ["policy"]},
+    "general_aggregate":{"required": True,  "sources": ["policy"]},
+    "products_aggregate":{"required": False, "sources": ["policy"]},
+    "personal_adv_injury":{"required": False,"sources": ["policy"]},
+    "damage_rented":    {"required": False, "sources": ["policy"]},
+    "med_expense":      {"required": False, "sources": ["policy"]},
+    # The two dangerous boxes: only "Y" if an endorsement is on the policy.
+    "additional_insured":{"required": False,"sources": ["policy"]},
+    "waiver_subrogation":{"required": False,"sources": ["policy"]},
+    "producer_code":    {"required": False, "sources": ["config"]},  # NOT in config -> stays blank
 }
 
 # --------------------------- Source loading ---------------------------------
@@ -53,10 +54,13 @@ def load_sources(policy_pdf: str, request_text: str = "") -> dict:
     """Load every source corpus as verifiable text. request_text is the verbatim
     user instruction that initiated this run; empty in event-driven mode, in
     which case request-sourced proposals cannot verify (the lane self-seals)."""
-    out = {"request": request_text}
+    out = {"request": request_text or (DATA / "coi_request.txt").read_text()}
+    ppath = Path(policy_pdf)
+    if not ppath.is_absolute():
+        ppath = DATA / ppath
     out["policy"] = "\n".join(
-        page.extract_text() or "" for page in PdfReader(DATA / policy_pdf).pages)
-    out["call"] = (DATA / "claims_call_transcript.txt").read_text()
+        page.extract_text() or "" for page in PdfReader(ppath).pages)
+    out["call"] = (DATA / "coi_request.txt").read_text()  # kept for compatibility
     import pandas as pd
     book = pd.read_excel(DATA / "agency_book.xlsx", sheet_name="Book of Business")
     claims = pd.read_excel(DATA / "agency_book.xlsx", sheet_name="Claims Log")
@@ -135,6 +139,12 @@ class Rule:
     passed: bool
     detail: str
 
+def _value(results, name):
+    for r in results:
+        if r.name == name and r.value is not None:
+            return r
+    return None
+
 def _get(results, name):
     for r in results:
         if r.name == name and r.value is not None:
@@ -162,34 +172,37 @@ def _parse_term(term: str):
 def validate(results: list[FieldResult], notice_date: date, policy_text: str) -> list[Rule]:
     rules = []
     term = _get(results, "policy_term")
-    dol_raw = _get(results, "date_of_loss")
-    dol = _parse_date(dol_raw) if dol_raw else None
     start, end = _parse_term(term)
-    if dol and start and end:
-        ok = start <= dol <= end
-        rules.append(Rule("loss_date_within_policy_term", "BLOCK", ok,
-            f"Loss {dol} vs term {start}–{end}" + ("" if ok else " — LOSS OUTSIDE POLICY PERIOD")))
+    # Rule 1: coverage in force on the certificate date (BLOCK if not).
+    if start and end:
+        ok = start <= notice_date <= end
+        rules.append(Rule("coverage_in_force_on_cert_date", "BLOCK", ok,
+            f"Certificate dated {notice_date}; policy term {start}–{end}"
+            + ("" if ok else " — POLICY NOT IN FORCE ON CERTIFICATE DATE")))
     else:
-        # Fail closed, but say exactly what failed — a generic shrug is undiagnosable.
-        problems = []
-        if not dol_raw: problems.append("loss date not captured")
-        elif not dol:   problems.append(f"loss date unparseable: '{dol_raw}'")
-        if not term:            problems.append("policy term not captured")
-        elif not (start and end): problems.append(f"policy term unparseable: '{term}'")
-        rules.append(Rule("loss_date_within_policy_term", "BLOCK", False,
-            "Cannot evaluate — " + "; ".join(problems)))
-    if dol:
-        rules.append(Rule("loss_date_not_in_future", "BLOCK", dol <= notice_date,
-            f"Loss {dol} vs notice date {notice_date}"))
-    phone = _get(results, "insured_phone")
-    if phone:
-        digits = re.sub(r"\D", "", phone)
-        rules.append(Rule("insured_phone_format", "WARN", len(digits) in (10, 11),
-            f"Phone '{phone}'"))
+        problems = "policy term not captured" if not term else f"policy term unparseable: '{term}'"
+        rules.append(Rule("coverage_in_force_on_cert_date", "BLOCK", False,
+            "Cannot evaluate — " + problems))
+    # Rule 2 & 3: the endorsement gates. A checked box requires an endorsement on the policy.
+    pol = policy_text.casefold()
+    for field, rulename, endorsement_terms in [
+        ("additional_insured", "additional_insured_requires_endorsement",
+         ("additional insured", "additional-insured")),
+        ("waiver_subrogation", "waiver_requires_endorsement",
+         ("waiver of subrogation", "waiver of subrogation")),
+    ]:
+        r = _value(results, field)
+        checked = r and str(r.value).strip().casefold() in ("y", "yes", "true")
+        if checked:
+            has_endorsement = any(t in pol for t in endorsement_terms) and "no additional-insured endorsement" not in pol and "no waiver of subrogation" not in pol
+            rules.append(Rule(rulename, "BLOCK", has_endorsement,
+                f"{field} marked on certificate"
+                + ("" if has_endorsement else " — NO ENDORSEMENT ON POLICY; cannot certify this right")))
+    # Rule 4: carrier matches policy.
     carrier = (_get(results, "carrier") or "").casefold()
     rules.append(Rule("carrier_matches_policy", "BLOCK",
-        bool(carrier) and carrier.split()[0] in policy_text.casefold(),
-        f"Carrier on notice: '{_get(results, 'carrier')}'"))
+        bool(carrier) and carrier.split()[0] in pol,
+        f"Carrier on certificate: '{_get(results, 'carrier')}'"))
     return rules
 
 # --------------------------- Decision ---------------------------------------

@@ -101,94 +101,60 @@ def _wrap(c, x, y, w_chars, text, size=7.5, leading=9):
 
 
 def render_reproduction_page(results, rules, status) -> bytes:
+    from engine import SCHEMA
     buf = io.BytesIO()
     c = rl_canvas.Canvas(buf, pagesize=letter)
-    top = H - 0.55 * inch
-
-    # Header
-    c.setFont("Helvetica-Bold", 13)
-    c.drawString(0.55 * inch, top, "PROPERTY LOSS NOTICE")
+    top = H - 0.6*inch
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(0.6*inch, top, "CERTIFICATE OF LIABILITY INSURANCE")
     c.setFont("Helvetica", 6.5); c.setFillColor(GREY)
-    c.drawString(0.55 * inch, top - 9, "ACORD 1 layout reproduction \u2014 prototype \u2014 synthetic test data")
+    c.drawString(0.6*inch, top-11, "ACORD 25 layout reproduction — prototype — synthetic test data")
     c.setFillColor(colors.black)
-    _box(c, W - 2.0 * inch, top - 14, 1.45 * inch, 24, "date (mm/dd/yyyy)")
-    _val(c, W - 2.0 * inch, top - 10, "08/24/2026")
+    c.setFont("Helvetica", 8); c.drawString(W-2.3*inch, top, "Certificate date: 08/25/2026")
 
-    y = top - 0.45 * inch
-    # Producer | Insured row
-    _box(c, 0.55 * inch, y - 58, 3.55 * inch, 58, "producer (agency)")
-    _val(c, 0.55 * inch, y - 20, _text(results, "agency_name"), 8)
-    _val(c, 0.55 * inch, y - 32, _text(results, "agency_address"), 7)
-    _val(c, 0.55 * inch, y - 44, _text(results, "agency_phone"), 7)
-    _box(c, 4.15 * inch, y - 58, W - 4.7 * inch, 58, "insured name and address")
-    _val(c, 4.15 * inch, y - 20, _text(results, "insured_name"), 8)
-    _val(c, 4.15 * inch, y - 32, _text(results, "insured_address"), 7)
-    _val(c, 4.15 * inch, y - 44, "Phone: " + _text(results, "insured_phone"), 7)
+    y = top - 0.5*inch
+    labels = {
+      "producer_name":"Producer (agency)","producer_address":"Producer address","producer_phone":"Producer phone",
+      "insured_name":"Named insured","insured_address":"Insured address","carrier":"Insurer (carrier)",
+      "policy_number":"Policy number","policy_term":"Policy period","cert_holder":"Certificate holder",
+      "each_occurrence":"Each occurrence","general_aggregate":"General aggregate",
+      "products_aggregate":"Products/completed ops","personal_adv_injury":"Personal & adv injury",
+      "damage_rented":"Damage to rented premises","med_expense":"Medical expense",
+      "additional_insured":"Additional insured","waiver_subrogation":"Waiver of subrogation",
+      "producer_code":"Producer code"}
+    for name in SCHEMA:
+        r = _value(results, name)
+        lab = labels.get(name, name)
+        c.setStrokeColor(colors.HexColor("#bbbbbb")); c.setLineWidth(0.5)
+        c.rect(0.6*inch, y-16, W-1.2*inch, 16)
+        c.setFont("Helvetica", 6); c.setFillColor(GREY)
+        c.drawString(0.66*inch, y-6, lab.upper())
+        c.setFillColor(colors.black); c.setFont("Helvetica", 9)
+        if r:
+            mark = MARKER.get(r.status, "")
+            c.drawString(2.6*inch, y-11, f"{r.value} {mark}")
+        elif SCHEMA[name]["required"]:
+            c.setFillColor(RED); c.drawString(2.6*inch, y-11, "** REQUIRED — NOT CAPTURED **"); c.setFillColor(colors.black)
+        else:
+            c.setFillColor(GREY); c.drawString(2.6*inch, y-11, "not captured — left blank"); c.setFillColor(colors.black)
+        y -= 17
+        if y < 1.6*inch: break
 
-    y -= 58 + 6
-    # Carrier / policy row
-    _box(c, 0.55 * inch, y - 28, 2.9 * inch, 28, "company (carrier)")
-    _val(c, 0.55 * inch, y - 20, _text(results, "carrier"), 7, max_chars=44)
-    _box(c, 3.5 * inch, y - 28, 1.5 * inch, 28, "policy number")
-    _val(c, 3.5 * inch, y - 20, _text(results, "policy_number"), 8)
-    _box(c, 5.05 * inch, y - 28, 1.9 * inch, 28, "policy period (eff - exp)")
-    _val(c, 5.05 * inch, y - 20, _text(results, "policy_term"), 7.5)
-    _box(c, 7.0 * inch, y - 28, W - 7.55 * inch, 28, "type")
-    c.rect(7.06 * inch, y - 22, 7, 7)  # HOMEOWNERS checkbox
-    c.setFont("Helvetica-Bold", 8); c.drawString(7.08 * inch, y - 20.5, "X")
-    c.setFont("Helvetica", 6); c.drawString(7.22 * inch, y - 20, "HOMEOWNERS (HO-3)")
-
-    y -= 28 + 6
-    # Loss row
-    _box(c, 0.55 * inch, y - 28, 1.7 * inch, 28, "date of loss")
-    _val(c, 0.55 * inch, y - 20, _text(results, "date_of_loss"), 8)
-    _box(c, 2.3 * inch, y - 28, 1.4 * inch, 28, "time of loss")
-    _val(c, 2.3 * inch, y - 20, _text(results, "time_of_loss"), 7.5)
-    _box(c, 3.75 * inch, y - 28, 1.6 * inch, 28, "type of loss / peril")
-    _val(c, 3.75 * inch, y - 20, _text(results, "peril"), 8)
-    _box(c, 5.4 * inch, y - 28, W - 5.95 * inch, 28, "deductible (applicable)")
-    _val(c, 5.4 * inch, y - 20, _text(results, "deductible"), 7.5)
-
-    y -= 28 + 6
-    _box(c, 0.55 * inch, y - 24, W - 1.1 * inch, 24, "location of loss")
-    _val(c, 0.55 * inch, y - 16, _text(results, "insured_address"), 8)
-
-    y -= 24 + 6
-    _box(c, 0.55 * inch, y - 86, W - 1.1 * inch, 86, "description of loss & damage")
-    _wrap(c, 0.62 * inch, y - 20, 118, _text(results, "loss_description", "NOT CAPTURED"))
-
-    y -= 86 + 6
-    _box(c, 0.55 * inch, y - 40, W - 1.1 * inch, 40, "remarks / prior losses / coverage a")
-    _val(c, 0.55 * inch, y - 18, "Coverage A: " + _text(results, "coverage_a"), 7.5)
-    _val(c, 0.55 * inch, y - 30, "Prior claims: " + _text(results, "prior_claims", "none on file"), 7)
-
-    y -= 40 + 10
-    # Decision strip + signature block (never asserted)
-    color, label = {"READY_TO_SUBMIT": (GREEN, "VALIDATED \u2014 READY TO SUBMIT"),
-                    "HOLD_FOR_INFO": (AMBER, "HELD \u2014 REQUIRED INFORMATION MISSING"),
-                    "BLOCKED": (RED, "BLOCKED \u2014 DO NOT SUBMIT")}[status]
-    c.setFillColor(color); c.rect(0.55 * inch, y - 22, W - 1.1 * inch, 22, fill=1, stroke=0)
-    c.setFillColor(colors.white); c.setFont("Helvetica-Bold", 10)
-    c.drawString(0.65 * inch, y - 16, label)
-    fails = [r for r in rules if not r.passed and r.severity == "BLOCK"]
+    color,label = {"READY_TO_SUBMIT":(GREEN,"VALIDATED — SAFE TO ISSUE"),
+                   "HOLD_FOR_INFO":(AMBER,"HELD — REQUIRED INFORMATION MISSING"),
+                   "BLOCKED":(RED,"BLOCKED — DO NOT ISSUE")}[status]
+    c.setFillColor(color); c.rect(0.6*inch, y-24, W-1.2*inch, 22, fill=1, stroke=0)
+    c.setFillColor(colors.white); c.setFont("Helvetica-Bold", 11)
+    c.drawString(0.7*inch, y-18, label)
+    fails=[r for r in rules if not r.passed and r.severity=="BLOCK"]
     if fails:
-        c.setFont("Helvetica", 7.5)
-        c.drawString(3.4 * inch, y - 15.5, fails[0].detail[:88])
-    c.setFillColor(colors.black)
-    y -= 34
-    _box(c, 0.55 * inch, y - 26, 4.4 * inch, 26, "reported by (signature)")
-    _val(c, 0.55 * inch, y - 18, "", 8)  # deliberately blank — never asserted
-    _box(c, 5.0 * inch, y - 26, W - 5.55 * inch, 26, "reported to carrier (date)")
-    _val(c, 5.0 * inch, y - 18, "\u2014 pending" if status == "READY_TO_SUBMIT" else "\u2014 withheld", 7.5)
-
-    c.setFont("Helvetica", 5.8); c.setFillColor(GREY)
-    c.drawString(0.55 * inch, 0.42 * inch,
-                 "\u2020 verified quote  \u2021 derived from verified quote  \u00a7 agency configuration \u2014 "
-                 "full provenance and validation record: Addendum (page 2). "
-                 "Every field traces to a source or is marked NOT CAPTURED; nothing is guessed.")
+        c.setFont("Helvetica",7.5); c.drawString(3.6*inch, y-17, fails[0].detail[:80])
+    c.setFillColor(GREY); c.setFont("Helvetica",5.8)
+    c.drawString(0.6*inch, 0.5*inch,
+        "† verified quote  ‡ derived  § agency config — full provenance on page 2. "
+        "Nothing is certified that isn't in the policy.")
     c.showPage(); c.save()
     return buf.getvalue()
-
 
 # ------------------------- Official-form fill (skill mechanism) --------------
 
