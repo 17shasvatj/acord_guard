@@ -1,0 +1,100 @@
+[
+ {
+  "field": "agency_name",
+  "source": "config",
+  "config_key": "agency_name",
+  "value": "Paws and Provisions LLC"
+ },
+ {
+  "field": "agency_address",
+  "source": "config",
+  "config_key": "agency_address",
+  "value": "6469 Applegate Drive, San Jose, CA 95119"
+ },
+ {
+  "field": "agency_phone",
+  "source": "config",
+  "config_key": "agency_phone",
+  "value": "+1 (650) 855-2837"
+ },
+ {
+  "field": "insured_name",
+  "source": "policy",
+  "value": "Maria Delgado",
+  "span": "Named Insured: Maria Delgado"
+ },
+ {
+  "field": "insured_address",
+  "source": "policy",
+  "value": "1420 Coral Reef Dr, Miami, FL",
+  "span": "Insured Location: 1420 Coral Reef Dr, Miami, FL"
+ },
+ {
+  "field": "insured_phone",
+  "source": "call",
+  "value": "305-555-0147",
+  "span": "My cell, 305-555-0147."
+ },
+ {
+  "field": "carrier",
+  "source": "policy",
+  "value": "Citizens Property Insurance Corporation",
+  "span": "CITIZENS PROPERTY INSURANCE CORPORATION"
+ },
+ {
+  "field": "policy_number",
+  "source": "policy",
+  "value": "HO-CIT-1001",
+  "span": "Policy Number: HO-CIT-1001"
+ },
+ {
+  "field": "policy_term",
+  "source": "policy",
+  "value": "03/15/2025 to 03/15/2026",
+  "span": "Policy Period: 03/15/2025 to 03/15/2026"
+ },
+ {
+  "field": "date_of_loss",
+  "source": "call",
+  "value": "August 22, 2026",
+  "span": "The hurricane hit us on the twenty-second",
+  "derived": true
+ },
+ {
+  "field": "time_of_loss",
+  "source": "call",
+  "value": "around two o'clock",
+  "span": "It was in the afternoon, around two o'clock when the worst of it hit."
+ },
+ {
+  "field": "peril",
+  "source": "call",
+  "value": "hurricane",
+  "span": "The hurricane hit us on the twenty-second and my house is a mess."
+ },
+ {
+  "field": "loss_description",
+  "source": "call",
+  "value": "The roof lost a bunch of shingles, and rain came right through into the bedroom and living room. A lot of our things got soaked and ruined. And we got about a foot of water on the ground floor from the surge.",
+  "span": "The roof lost a bunch of shingles, and rain came right through into the bedroom and living room. A lot of our things got soaked and ruined. And we got about a foot of water on the ground floor from the surge."
+ },
+ {
+  "field": "deductible",
+  "source": "policy",
+  "value": "2% of Coverage A ($8,200)",
+  "span": "Hurricane / Named Storm      2% of Coverage A ($8,200)"
+ },
+ {
+  "field": "coverage_a",
+  "source": "policy",
+  "value": "$410,000",
+  "span": "A \u2014 Dwelling      $410,000"
+ },
+ {
+  "field": "prior_claims",
+  "source": "book",
+  "value": "CL-5001 | Wind / Roof | Closed | 22000",
+  "span": "Claim ID: CL-5001 | Client Name: Maria Delgado | Date of Loss: 2024-09-12 | Type: Wind / Roof | Status: Closed | Amount Paid: 22000",
+  "derived": true
+ }
+]

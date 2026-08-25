@@ -1,0 +1,17 @@
+CALL TRANSCRIPT — Inbound Claims Call
+Line: Paws and Provisions LLC agency line | Duration: 6m 12s | Date: 08/24/2026
+
+GAIL: Thank you for calling Paws and Provisions, this is Gail. How can I help you today?
+CALLER: Hi, this is Maria Delgado. The hurricane hit us on the twenty-second and my house is a mess. I need to file a claim.
+GAIL: I'm so sorry, Maria. I have your homeowners policy here. Can you tell me what happened?
+CALLER: The roof lost a bunch of shingles, and rain came right through into the bedroom and living room. A lot of our things got soaked and ruined. And we got about a foot of water on the ground floor from the surge.
+GAIL: I understand. Were you or anyone in the home injured?
+CALLER: No, thank God. We're staying at a hotel right now, the house isn't livable.
+GAIL: Do you know roughly what time the damage happened on August 22?
+CALLER: It was in the afternoon, around two o'clock when the worst of it hit.
+GAIL: And what's the best phone number to reach you for the adjuster?
+CALLER: My cell, 305-555-0147.
+GAIL: Got it, 305-555-0147. Is the damaged property the home on Coral Reef Drive in Miami?
+CALLER: Yes, 1420 Coral Reef Drive.
+GAIL: Thank you, Maria. I'm going to get this claim started with Citizens right away and text you a confirmation. The adjuster will reach out at the number you gave me.
+CALLER: Thank you so much.
