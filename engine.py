@@ -214,6 +214,16 @@ def decide(results, rules):
                    if spec["required"] and n not in filled]
     rejected = [r for r in results if r.status.startswith("REJECTED")]
     blocks = [r for r in rules if r.severity == "BLOCK" and not r.passed]
-    if blocks:     return "BLOCKED", missing_req, rejected, blocks
-    if missing_req: return "HOLD_FOR_INFO", missing_req, rejected, blocks
+    # A rejected ENDORSEMENT box (additional_insured / waiver_subrogation) must BLOCK,
+    # not silently drop: someone tried to certify a legal protection the policy doesn't
+    # support. Issuing a certificate that quietly omits a requested endorsement is the
+    # same "advise but ship" failure we reject — so we stop and flag it.
+    ENDORSEMENT_FIELDS = {"additional_insured", "waiver_subrogation"}
+    endorsement_rejects = [r for r in rejected if r.name in ENDORSEMENT_FIELDS]
+    if blocks:
+        return "BLOCKED", missing_req, rejected, blocks
+    if endorsement_rejects:
+        return "BLOCKED", missing_req, rejected, blocks
+    if missing_req:
+        return "HOLD_FOR_INFO", missing_req, rejected, blocks
     return "READY_TO_SUBMIT", missing_req, rejected, blocks

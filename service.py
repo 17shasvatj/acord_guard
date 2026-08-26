@@ -39,10 +39,11 @@ OUT = HERE / "out"; OUT.mkdir(exist_ok=True)
 
 SCENARIO_POLICY = {"fabrication": "coi_policy_inforce.pdf",
                    "expired": "coi_policy_expired.pdf",
-                   "clean": "coi_policy_inforce.pdf"}
+                   "clean": "coi_policy_inforce.pdf",
+                   "endorsed": "coi_policy_endorsed.pdf"}
 FALLBACK_PROPOSALS = {
     "fabrication": "coi_proposals_fabrication.json", "expired": "coi_proposals_expired.json",
-    "clean": "coi_proposals_clean.json"}
+    "clean": "coi_proposals_clean.json", "endorsed": "coi_proposals_endorsed.json"}
 DEFAULT_REQUEST = ("Generate a Certificate of Insurance for Paws and Provisions LLC. "
                    "Certificate holder: Acme General Contractors.")
 

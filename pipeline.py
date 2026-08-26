@@ -23,6 +23,7 @@ NOTICE_DATE = date(2026, 8, 25)
 SCEN = {
     "fabrication": dict(policy="coi_policy_inforce.pdf", proposals="coi_proposals_fabrication.json"),
     "expired":     dict(policy="coi_policy_expired.pdf", proposals="coi_proposals_expired.json"),
+    "endorsed":    dict(policy="coi_policy_endorsed.pdf", proposals="coi_proposals_endorsed.json"),
     "clean":       dict(policy="coi_policy_inforce.pdf", proposals="coi_proposals_clean.json"),
 }
 

@@ -38,8 +38,8 @@
  {
   "field": "policy_number",
   "source": "policy",
-  "value": "BOP-HTF-1010",
-  "span": "Policy Number: BOP-HTF-1010"
+  "value": "BOP-HTF-2020",
+  "span": "Policy Number: BOP-HTF-2020"
  },
  {
   "field": "policy_term",
@@ -91,14 +91,16 @@
  },
  {
   "field": "additional_insured",
-  "source": "request",
+  "source": "policy",
   "value": "Y",
-  "span": "List Acme as additional insured with a waiver of subrogation per the subcontract"
+  "derived": true,
+  "span": "Additional Insured endorsement (CG 20 10) is attached: Acme General Contractors"
  },
  {
   "field": "waiver_subrogation",
-  "source": "request",
+  "source": "policy",
   "value": "Y",
-  "span": "List Acme as additional insured with a waiver of subrogation per the subcontract"
+  "derived": true,
+  "span": "Waiver of Subrogation endorsement (CG 24 04) is attached in favor of Acme"
  }
 ]

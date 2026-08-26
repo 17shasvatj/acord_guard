@@ -59,6 +59,37 @@ def dec_page(path, term):
 dec_page(DATA/"coi_policy_inforce.pdf", "01/22/2026 to 01/22/2027")
 dec_page(DATA/"coi_policy_expired.pdf", "01/22/2025 to 01/22/2026")
 
+def dec_page_endorsed(path, term):
+    """In-force policy that DOES carry additional-insured + waiver endorsements."""
+    c = canvas.Canvas(str(path), pagesize=letter); y=10.3*inch
+    def L(t,size=10,dy=0.26):
+        nonlocal y; c.setFont("Helvetica",size); c.drawString(1*inch,y,t); y-=dy*inch
+    c.setFont("Helvetica-Bold",13); c.drawString(1*inch,y,"THE HARTFORD — BUSINESSOWNERS POLICY"); y-=0.35*inch
+    c.setFont("Helvetica-Bold",10); c.drawString(1*inch,y,"Declarations"); y-=0.3*inch
+    L("Named Insured: Paws and Provisions LLC")
+    L("Mailing Address: 6469 Applegate Drive, San Jose, CA 95119")
+    L("Policy Number: BOP-HTF-2020")
+    L("Carrier: The Hartford (Hartford Fire Insurance Company)")
+    L(f"Policy Period: {term}")
+    L("")
+    c.setFont("Helvetica-Bold",10); c.drawString(1*inch,y,"Commercial General Liability — Limits of Liability"); y-=0.28*inch
+    L("Each Occurrence: $1,000,000")
+    L("General Aggregate: $2,000,000")
+    L("Products/Completed Operations Aggregate: $2,000,000")
+    L("Personal & Advertising Injury: $1,000,000")
+    L("Damage to Rented Premises: $100,000")
+    L("Medical Expense (any one person): $5,000")
+    L("")
+    c.setFont("Helvetica-Bold",10); c.drawString(1*inch,y,"Endorsements Attached to This Policy"); y-=0.28*inch
+    L("Additional Insured endorsement (CG 20 10) is attached: Acme General Contractors")
+    L("is named as an additional insured on this policy.")
+    L("Waiver of Subrogation endorsement (CG 24 04) is attached in favor of Acme")
+    L("General Contractors.")
+    c.setFont("Helvetica",7); c.drawString(1*inch,0.7*inch,"Synthetic sample for software testing. Not a real policy.")
+    c.save(); print("wrote", path.name)
+
+dec_page_endorsed(DATA/"coi_policy_endorsed.pdf", "01/22/2026 to 01/22/2027")
+
 req = DATA/"coi_request.txt"
 if not req.exists():
     req.write_text(
