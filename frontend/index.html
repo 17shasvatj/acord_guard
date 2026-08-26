@@ -373,7 +373,7 @@ document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{mode=b.datas
   document.getElementById("uploadNote").style.display = mode==="upload"?"block":"none";});
 
 const stream=document.getElementById("stream"),banner=document.getElementById("banner"),
-  summary=document.getElementById("summary"),links=document.getElementById("links"),
+  summary=document.getElementById("summary"),links=document.getElementById("links");
 
 function say(cls,ico,html){const d=document.createElement("div");d.className="msg "+cls;
   d.innerHTML=`<span class="ico">${ico}</span><span>${html}</span>`;
