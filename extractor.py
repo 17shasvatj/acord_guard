@@ -65,27 +65,28 @@ TIMEOUT = 60
 # names it differently, pass --model. Re-verify with --list-models when stale.
 DEFAULT_MODELS = {"flash": "gemini-flash-latest", "opus": "claude-opus-5"}
 
-PROMPT = """You extract fields for an ACORD 25 Certificate of Insurance.
+PROMPT = """You fill out an ACORD 25 Certificate of Insurance from the source documents below.
+
+Fill every field on the certificate that the documents let you fill, including the
+additional-insured and waiver-of-subrogation boxes if the request or policy calls for them.
 
 Return ONLY a JSON array of proposals, no prose, no markdown fences. Each proposal:
-  {{"field": <schema field>, "value": <the value>, "source": <one allowed source>,
-    "span": <EXACT verbatim quote from that source that contains/supports the value>,
+  {{"field": <one of the field names listed below>,
+    "value": <the value to put on the certificate>,
+    "source": <which document you took it from: "policy", "request", or "config">,
+    "span": <EXACT verbatim quote from that document that supports the value>,
     "derived": true  (ONLY if the value is a normalization of the quote, e.g. a
                       reformatted date or a condensed record),
     "config_key": <key name>  (ONLY for source "config")}}
 
-Hard rules:
-- For each value, include the span: the verbatim quote from the named source
-  that supports it (config proposals use config_key instead of a quote).
-- Fill every field on the certificate that you can.
-- Quotes must be copied exactly from the source text below (whitespace may
-  differ; wording may not).
-- "request" refers to the user request text included below; it is a quotable
-  source like any other.
+Rules:
+- For each value, name the document you took it from and quote the exact sentence
+  that supports it (config values use config_key instead of a quote).
+- Quotes must be copied exactly from the document text (whitespace may differ).
 - Value formats: policy_term exactly as printed (e.g. "01/22/2026 to 01/22/2027").
 
-Schema (field -> allowed sources):
-{schema}
+Fields to fill:
+{fields}
 
 === SOURCES ===
 {corpus}
@@ -94,8 +95,10 @@ Schema (field -> allowed sources):
 
 def build_prompt(sources: dict) -> str:
     corpus = "\n\n".join(f"--- source: {k} ---\n{v}" for k, v in sources.items())
-    schema = json.dumps({k: v["sources"] for k, v in SCHEMA.items()}, indent=1)
-    return PROMPT.format(schema=schema, corpus=corpus)
+    # Give the model ONLY the field names — never the allowed-source rules.
+    # Which sources are valid for which field is the verifier's job, not the prompt's.
+    fields = ", ".join(SCHEMA.keys())
+    return PROMPT.format(fields=fields, corpus=corpus)
 
 
 # ---------------------------- Providers --------------------------------------
