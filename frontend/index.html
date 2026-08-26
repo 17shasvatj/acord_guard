@@ -331,8 +331,6 @@ document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{mode=b.datas
   document.getElementById("redteamNote").style.display =
     (mode!=="upload" && document.getElementById("scenario").value==="fabrication")?"block":"none";});
 
-let RUNVALS=[];
-function fnv(s){let x=0x811c9dc5;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,0x01000193)>>>0;}return x.toString(16).padStart(8,"0");}
 const stream=document.getElementById("stream"),banner=document.getElementById("banner"),
   summary=document.getElementById("summary"),links=document.getElementById("links");
 
@@ -394,7 +392,6 @@ function handle(e){
       if(document.getElementById("scenario").value==="fabrication") break; // already narrated via 'injected'
       say("info","💡",`<b>${e.model}</b> suggested <b>${e.count}</b> values for the form${e.via!=="live"?" <i>(replayed from a saved real run)</i>":""}. Now checking each one against the file…`);break;
     case "verdict":{
-      if(e.status&&(e.status.startsWith("VERIFIED")||e.status==="CONFIG"))RUNVALS.push(e.field+"="+e.value);
       const label=FIELD[e.field]||e.field, src=SRC[e.source]||e.source;
       if(e.status==="VERIFIED")
         say("ok","✓",`<b>${label}</b>: ${e.value}<span class="q">backed by ${src}: “${e.quote}”</span>`);
@@ -420,8 +417,6 @@ function handle(e){
       if(e.missing_required.length)s+=` <b>${e.missing_required.map(f=>FIELD[f]||f).join(", ")}</b> — a question for the caller.`;
       if(e.rejected.length)s+=`<br>Suggestions rejected as unsupported: <b>${e.rejected.map(f=>FIELD[f]||f).join(", ")}</b>.`;
       summary.innerHTML=s+`<br><span class="note">${e.via==="live"?"live model run":"saved run (labeled)"} · ${e.elapsed_ms} ms</span>`;
-      {const fp=fnv(RUNVALS.sort().join("|"));
-      summary.innerHTML+=`<div style="margin-top:10px;padding:9px 12px;background:#eef2f7;border-radius:8px;font-size:13px">Document fingerprint: <b style="font-family:var(--mono)">${fp}</b><br><span class="note" style="margin-top:2px">A hash of every value on the finished certificate. <b>Run this again — the fingerprint won't change.</b> Same input, same document, every time. That's the property the raw model doesn't have.</span></div>`;}
       links.innerHTML=`<a class="pdfbtn" href="${API}${e.exhibit}" target="_blank">Open the finished document ↗</a>`;
       say("info","■",`Decision: <b>${banner.textContent}</b>.`);break;}
   }
