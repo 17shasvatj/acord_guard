@@ -345,7 +345,7 @@ document.getElementById("go").onclick=async()=>{
   summary.textContent="Working…";banner.className="banner idle";banner.textContent="Running…";
   const btn=document.getElementById("go");btn.disabled=true;
   const fd=new FormData();fd.append("mode",mode);fd.append("tier",tier);
-  fd.append("scenario",document.getElementById("scenario").value);
+  fd.append("scenario", mode==="upload" ? "clean" : document.getElementById("scenario").value);
   if(mode==="upload"){const f=document.getElementById("decfile").files[0];
     if(!f){alert("Choose a PDF declarations page first.");document.getElementById("go").disabled=false;return;}
     fd.append("dec_page",f);}
@@ -364,10 +364,12 @@ document.getElementById("go").onclick=async()=>{
 function handle(e){
   switch(e.type){
     case "start":
-      if(e.scenario==="fabrication")
+      if(e.scenario==="fabrication" && e.mode!=="upload")
         say("info","▶",`<b>Stress test:</b> the AI is bypassed. Force-feeding the checker the values a careless system might produce — the additional-insured and waiver boxes Acme asked for, marked “yes” with no endorsement on the policy to back them. Each should be blocked below.`);
       else
-        say("info","▶",`Running the <b>${e.scenario}</b> situation — <b>${e.tier==="recorded"?"saved run":"Opus 5"}</b> proposes the values.`);break;
+        say("info","▶", e.mode==="upload"
+             ? `Reading <b>your uploaded policy</b> — <b>Opus 5</b> proposes the values, the layer checks each one.`
+             : `Running the <b>${e.scenario}</b> situation — <b>${e.tier==="recorded"?"saved run":"Opus 5"}</b> proposes the values.`);break;
     case "sources":
       say("info","📁","Opened the client file: the customer's policy, the certificate request, and the agency's settings.");break;
     case "ops":
