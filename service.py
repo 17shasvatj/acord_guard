@@ -88,7 +88,7 @@ def _stream(mode: str, tier: str, scenario: str, policy_path: str, request_text:
 
     # 2) proposals — live model, or fallback
     used_model, via = tier, "live"
-    if scenario == "fabrication":
+    if scenario == "fabrication" and mode != "upload":
         # Red-team the checker: feed the known fabricated values directly, on any
         # tier. The model is deliberately bypassed — we are testing whether the
         # verifier rejects planted fakes, not whether a model produces them.
@@ -107,9 +107,11 @@ def _stream(mode: str, tier: str, scenario: str, policy_path: str, request_text:
         yield _sse({"type": "injected", "items": planted})
         yield _sse({"type": "proposals_received", "count": len(proposals),
                     "model": used_model, "via": via})
-    elif tier in ("flash", "opus"):
+    elif tier in ("flash", "opus") or mode == "upload":
+        # An uploaded policy must be read live — recorded proposals are for the sample file.
+        eff_tier = tier if tier in ("flash", "opus") else "opus"
         try:
-            proposals, used_model = extractor.extract(tier, sources, on_event=on_event)
+            proposals, used_model = extractor.extract(locals().get("eff_tier", tier), sources, on_event=on_event)
             for e in events:                       # surface any retries that happened
                 yield _sse({"type": "ops", **e})
         except Exception as ex:
