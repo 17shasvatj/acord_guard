@@ -103,7 +103,8 @@
   <span class="step-sub">The situation, and the documents the AI is given to work from.</span>
   <h2>The client file</h2>
   <p class="lead">A small insurance agency (Bayline Insurance Services) and its records for one commercial customer, Paws and Provisions LLC.
-     Everything the AI is allowed to know lives in these documents — you can open each one.</p>
+     Everything the AI is allowed to use comes from the customer's policy, the request it's answering,
+     and the agency's own settings — the three sources below. Nothing else.</p>
   <div class="cards">
     <div class="card">
       <h3>The customer's insurance policy (the “declarations page”)</h3>
@@ -121,6 +122,12 @@
          carries the matching endorsements. <b>This one doesn't.</b> Hold onto that — it's the exact
          thing the stress test at the end puts to the test.</p>
       <div class="doc-btns"><a id="reqDoc" target="_blank">Read the request ↗</a></div>
+    </div>
+    <div class="card">
+      <h3>The agency's own settings</h3>
+      <p>The issuing agency's fixed details — its name, address, phone, and producer code — that belong
+         on every certificate it puts out. These come from the agency's account settings, not from the
+         customer's file, and the layer treats them as a source like any other.</p>
     </div>
   </div>
   <p class="note">A <b>certificate of insurance</b> is one page an insured business hands to a client or
@@ -406,7 +413,7 @@ function handle(e){
       else
         say("info","▶",`Running the <b>${e.scenario}</b> situation — <b>${e.tier==="recorded"?"saved run":e.tier}</b> suggests the values.`);break;
     case "sources":
-      say("info","📁","Opened the client file: the policy, the phone call, the client records, the agency's settings.");break;
+      say("info","📁","Opened the client file: the customer's policy, the certificate request, and the agency's settings.");break;
     case "ops":
       if(e.event==="empty_pdf"){say("ops","⚠",e.detail);break;}
       say("ops","⚠",`Server hiccup from the model provider (${e.reason||""}) — retrying in ${e.wait}s. The system rides this out.`);break;
