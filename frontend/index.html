@@ -209,11 +209,10 @@
         <option value="fabrication">Stress test — fabricated values forced in</option>
       </select>
     </div>
-    <div class="fld"><label>Which model does the suggesting?</label>
+    <div class="fld"><label>How to run it</label>
       <div class="seg" id="tier">
-        <button data-t="opus" class="on">Opus 5</button>
-        <button data-t="flash">Gemini 3.7 Flash (default)</button>
-        <button data-t="recorded">Saved run (no API)</button>
+        <button data-t="opus" class="on">Live (Opus 5)</button>
+        <button data-t="recorded">Saved run (instant, no API)</button>
       </div>
     </div>
     <button class="go" id="go">Run it</button>
@@ -275,7 +274,7 @@
 <script>
 // DEPLOY: replace the placeholder with your Render backend URL before deploying the frontend.
 //   e.g. const API_BASE = "https://acord-guard-api.onrender.com";
-const API_BASE = "https://acord-guard.onrender.com";   // <-- CHANGE THIS FOR DEPLOY
+const API_BASE = "http://localhost:8000";   // <-- CHANGE THIS FOR DEPLOY
 const API = localStorage.getItem("ACORD_API") || API_BASE;
 document.getElementById("apinote").textContent = " · backend: " + API;
 for (const [id,path] of [["polDoc","/corpus/policy-inforce"],["reqDoc","/corpus/request"],["dlPol","/corpus/policy-inforce"],["dlReq","/corpus/request"]])
@@ -368,7 +367,7 @@ function handle(e){
       if(e.scenario==="fabrication")
         say("info","▶",`<b>Stress test:</b> the AI is bypassed. Force-feeding the checker the values a careless system might produce — the additional-insured and waiver boxes Acme asked for, marked “yes” with no endorsement on the policy to back them. Each should be blocked below.`);
       else
-        say("info","▶",`Running the <b>${e.scenario}</b> situation — <b>${e.tier==="recorded"?"saved run":e.tier}</b> suggests the values.`);break;
+        say("info","▶",`Running the <b>${e.scenario}</b> situation — <b>${e.tier==="recorded"?"saved run":"Opus 5"}</b> proposes the values.`);break;
     case "sources":
       say("info","📁","Opened the client file: the customer's policy, the certificate request, and the agency's settings.");break;
     case "ops":
