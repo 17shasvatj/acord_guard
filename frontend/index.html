@@ -350,7 +350,7 @@
 <script>
 // DEPLOY: replace the placeholder with your Render backend URL before deploying the frontend.
 //   e.g. const API_BASE = "https://acord-guard-api.onrender.com";
-const API_BASE = "https://acord-guard.onrender.com";   // <-- CHANGE THIS FOR DEPLOY
+const API_BASE = "http://localhost:8000";   // <-- CHANGE THIS FOR DEPLOY
 const API = localStorage.getItem("ACORD_API") || API_BASE;
 document.getElementById("apinote").textContent = " · backend: " + API;
 for (const [id,path] of [["polDoc","/corpus/policy-inforce"],["reqDoc","/corpus/request"],["dlPol","/corpus/policy-inforce"],["dlPolV","/corpus/policy-expired"],["dlReq","/corpus/request"]])
@@ -367,9 +367,9 @@ const RULEQ = {coverage_in_force_on_cert_date:"Was the policy in force on the ce
   additional_insured_requires_endorsement:"Is there an endorsement on file to certify additional-insured status?",
   waiver_requires_endorsement:"Is there an endorsement on file to certify a waiver of subrogation?",
   carrier_matches_policy:"Does the insurer match the policy?"};
-const REJPLAIN = s => ({REJECTED_SPAN_NOT_FOUND:"the quote it offered isn't actually in that document",
-  REJECTED_NO_SPAN:"it offered no supporting quote at all",
-  REJECTED_VALUE_NOT_IN_SPAN:"the quote is real, but the value isn't in it",
+const REJPLAIN = s => ({REJECTED_SPAN_NOT_FOUND:"the sentence it pointed to isn't actually in the document",
+  REJECTED_NO_SPAN:"it gave no supporting sentence from any document",
+  REJECTED_VALUE_NOT_IN_SPAN:"the sentence is real, but this value isn't in it",
   REJECTED_NOT_IN_CONFIG:"that value isn't in the agency's settings",
   REJECTED_SOURCE:"that's not a document this value is allowed to come from",
   REJECTED_UNKNOWN_FIELD:"that's not a field on this form",
@@ -378,17 +378,17 @@ const REJPLAIN = s => ({REJECTED_SPAN_NOT_FOUND:"the quote it offered isn't actu
 let tier="opus", mode="scenario";
 const scenSel=document.getElementById("scenario");
 const SCEN_DESC = {
-  "clean": "<b>Same request, in-force policy.</b> Acme asked to be additional insured with a waiver — but the "
-    +"policy carries no such endorsement, so the model has nothing to cite and <b>omits those boxes</b>. "
-    +"Coverage is active and every other value traces to the policy, so a <b>valid certificate issues with the "
-    +"endorsement boxes correctly blank</b>. The request asked; the policy didn't support it; the layer didn't invent it.",
-  "expired": "<b>Same request, expired policy.</b> The only change from the in-force run is the coverage dates. "
-    +"The policy lapsed before the certificate date, so the layer <b>blocks the certificate entirely</b> — you "
-    +"cannot prove coverage that no longer exists, no matter what the request asks for.",
-  "fabrication": "<b>Same request and in-force policy as the first scenario — but the model is bypassed and "
-    +"fabricated values are force-fed to the checker</b>, including the endorsement boxes checked “Y”. This tests "
-    +"the guarantee: when a checked box <i>does</i> reach the checker, the endorsement rule blocks it on the "
-    +"specific grounds that no endorsement is on the policy. Omission handles the normal case; this rule is the backstop."};
+  "clean": "<b>Active policy.</b> Acme asked to be added as additional insured with a waiver of subrogation — "
+    +"but this policy doesn't include those add-ons. The certificate comes back <b>valid, with those two boxes "
+    +"left blank</b>: the coverage that really exists is certified, and the protections the policy doesn't carry "
+    +"are simply not claimed. Acme asked; the policy didn't have it; the certificate doesn't pretend otherwise.",
+  "expired": "<b>Expired policy.</b> Everything is the same as the active-policy run except the coverage dates — "
+    +"this policy lapsed before the certificate date. The layer <b>refuses to issue the certificate at all</b>: "
+    +"you can't prove coverage that has already ended, whatever the request asks for.",
+  "fabrication": "<b>The stress test.</b> Same active policy — but this time we skip the AI and hand the checker "
+    +"a batch of <b>deliberately fabricated values</b>, including the additional-insured and waiver boxes marked "
+    +"“yes.” The point is to see whether a fake can slip through. Each one is caught and the certificate is "
+    +"blocked — the boxes on the specific grounds that <b>the policy carries no such endorsement</b>."};
 function renderScenDesc(){document.getElementById("scenDesc").innerHTML = SCEN_DESC[scenSel.value] || "";}
 function toggleRedteam(){document.getElementById("redteamNote").style.display =
   scenSel.value==="fabrication" ? "block" : "none";}
