@@ -27,10 +27,10 @@ from pathlib import Path
 
 import requests
 
-RETRYABLE = (429, 500, 502, 503, 504)
+RETRYABLE = (500, 502, 503, 504)  # NOT 429: quota errors do not recover on retry
 
 
-def _request(method, url, *, attempts=4, on_event=None, **kw):
+def _request(method, url, *, attempts=2, on_event=None, **kw):
     """HTTP with exponential backoff on transient failures, and real error
     bodies on permanent ones. Keys travel in headers, never in URLs — so
     tracebacks and logs can't leak credentials."""
@@ -59,7 +59,7 @@ from engine import SCHEMA, load_sources
 import pipeline
 
 HERE = Path(__file__).parent
-TIMEOUT = 60
+TIMEOUT = (5, 20)   # (connect, read) — fail fast instead of hanging
 # Opus id confirmed via --list-models against a live key (matches the "Opus 5"
 # tier used in the GailGPT exhibits). Flash id is an alias — if your key's list
 # names it differently, pass --model. Re-verify with --list-models when stale.
