@@ -286,15 +286,11 @@
       <div class="seg" id="mode">
         <button data-m="scenario" class="on">Use our test file</button>
         <button data-m="upload">Upload your own policy</button>
-        <button data-m="custom">Type the loss yourself</button>
       </div>
     </div>
     <div class="fld" id="uploadFld" style="display:none">
       <label>Your declarations page (PDF, text-based)</label>
       <input type="file" id="decfile" accept="application/pdf"/></div>
-    <div class="fld" id="customFld" style="display:none">
-      <label>Describe the loss</label>
-      <input type="text" id="reqtext" size="40" placeholder="e.g. Kitchen fire on July 3, 2026, smoke damage throughout"/></div>
   </div>
   <p class="note" id="uploadNote" style="display:none">Your policy replaces the sample; the certificate request stays fixed. The model reads <b>your</b> policy for the coverage dates, limits, carrier, and — crucially — whether the endorsements exist to support the requested boxes. If the PDF is a scan with no text layer,
      you'll see every field come back “not found” — that's the layer refusing to guess on something it can't read,
@@ -399,7 +395,6 @@ document.querySelectorAll("#tier button").forEach(b=>b.onclick=()=>{tier=b.datas
 document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{mode=b.dataset.m;
   document.querySelectorAll("#mode button").forEach(x=>x.classList.remove("on"));b.classList.add("on");
   document.getElementById("uploadFld").style.display = mode==="upload"?"flex":"none";
-  document.getElementById("customFld").style.display = mode==="custom"?"flex":"none";
   document.getElementById("uploadNote").style.display = mode==="upload"?"block":"none";});
 
 const stream=document.getElementById("stream"),banner=document.getElementById("banner"),
@@ -416,7 +411,6 @@ document.getElementById("go").onclick=async()=>{
   const btn=document.getElementById("go");btn.disabled=true;
   const fd=new FormData();fd.append("mode",mode);fd.append("tier",tier);
   fd.append("scenario",document.getElementById("scenario").value);
-  if(mode==="custom")fd.append("request_text",document.getElementById("reqtext").value);
   if(mode==="upload"){const f=document.getElementById("decfile").files[0];
     if(!f){alert("Choose a PDF declarations page first.");document.getElementById("go").disabled=false;return;}
     fd.append("dec_page",f);}
