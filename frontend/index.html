@@ -378,10 +378,10 @@ const REJPLAIN = s => ({REJECTED_SPAN_NOT_FOUND:"the sentence it pointed to isn'
 let tier="opus", mode="scenario";
 const scenSel=document.getElementById("scenario");
 const SCEN_DESC = {
-  "clean": "<b>Active policy.</b> Acme asked to be added as additional insured with a waiver of subrogation — "
-    +"but this policy doesn't include those add-ons. The certificate comes back <b>valid, with those two boxes "
-    +"left blank</b>: the coverage that really exists is certified, and the protections the policy doesn't carry "
-    +"are simply not claimed. Acme asked; the policy didn't have it; the certificate doesn't pretend otherwise.",
+  "clean": "<b>Active policy — the baseline.</b> Coverage is in force and every value on the certificate "
+    +"traces back to the policy, so the layer <b>issues the certificate</b>. This is the case where everything "
+    +"checks out — it's here to show the layer approves valid certificates, not just blocks bad ones. Compare it "
+    +"to the next two, where something is wrong.",
   "expired": "<b>Expired policy.</b> Everything is the same as the active-policy run except the coverage dates — "
     +"this policy lapsed before the certificate date. The layer <b>refuses to issue the certificate at all</b>: "
     +"you can't prove coverage that has already ended, whatever the request asks for.",
