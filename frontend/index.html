@@ -91,10 +91,10 @@
 <body>
 
 <header><div class="wrap">
-  <h1>AI can fill out insurance certificates.<br>This is the layer that stops it from certifying things that aren't true.</h1>
-  <p>Below: a real test — an insurance client's file, what an AI assistant produced from it
-     (with the parts it invented highlighted), and a checking layer you can run yourself,
-     live, on the same file.</p>
+  <h1>Insurance is an expensive-mistake industry.<br>This layer keeps AI-generated documents grounded in fact.</h1>
+  <p>A certificate of insurance is a legal attestation people rely on. One wrong value — a date, a limit,
+     a checked box — is a liability the issuing agency owns. Below: a real client file, one real example of
+     what can go wrong, and a verification layer you can run yourself, live.</p>
 </div></header>
 
 <!-- STEP 1: BACKGROUND -->
@@ -136,108 +136,59 @@
      is wrong, the party relying on it is exposed, and the agency that issued it is liable.</p>
 </div></section>
 
-<!-- STEP 2: WHAT GAIL DID -->
+<!-- STEP 2: THE PROBLEM -->
 <section><div class="wrap">
-  <span class="step">STEP 2 — THE PROBLEM</span>
-  <span class="step-sub">What Gail's certificate skill does with that file today, and where it goes wrong.</span>
-  <h2>What GailGPT produced from these documents</h2>
-  <p class="lead">We asked GailGPT — Gail's certificate assistant — to generate a certificate of insurance
-     from the documents in Step 1, and we ran it many times across two AI models: the one Gail uses by default
-     <b>(Gemini 3.7 Flash)</b> and its most capable option <b>(Opus 5)</b>. The point was to see whether simply
-     using a smarter model fixes the problem. It doesn't. Two things went wrong; the runs that produced each are
-     labeled on the cards below. <span class="made-up">Highlighted</span> values appear nowhere in the
-     policy — the AI supplied them.</p>
+  <span class="step">STEP 2 — WHY GROUNDING MATTERS</span>
+  <span class="step-sub">One real example, and the structural gap behind it.</span>
+  <h2>An AI-generated certificate, invalid on its own face</h2>
+  <p class="lead">We asked GailGPT for a certificate against a policy whose coverage ran
+     <b>01/22/2025 – 01/22/2026</b>. Here is the actual document it produced — look at the two dates together:</p>
 
   <div class="card badcard">
-    <div class="tagline">PROBLEM 1 · CERTIFIED EXPIRED COVERAGE · DEFAULT MODEL (GEMINI 3.7 FLASH)</div>
-    <h3>It issued a certificate on coverage that had already expired</h3>
-    <p>Given the policy whose term ran <b>01/22/2025 – 01/22/2026</b>, with a certificate date of
-       <b>08/25/2026</b> — coverage lapsed seven months earlier — the default model (Gemini 3.7 Flash) produced a complete,
-       downloadable ACORD 25 certifying that coverage, and <b>said nothing about the expiration</b>. Whether
-       coverage is in force on the certificate date is the single most important thing the document exists to
-       prove. A contractor relying on this certificate would believe Paws and Provisions was covered. It wasn't.</p>
-  </div>
-
-  <div class="card badcard" style="margin-top:16px">
-    <div class="tagline">PROBLEM 2 · INVENTED A REGULATORY ID · BOTH MODELS, EVERY RUN</div>
-    <h3>It invented the insurer's NAIC number</h3>
-    <div class="excerpt"><div class="src">the policy names only “The Hartford” — it has no NAIC number</div>
-      Insurer: Hartford Fire Insurance Company &nbsp; NAIC #: <span class="made-up">19682</span>
+    <div class="tagline">GAILGPT'S ACTUAL OUTPUT · ONE OF OUR TEST RUNS</div>
+    <div class="cards" style="margin-top:8px">
+      <div>
+        <div class="excerpt" style="padding:10px"><div class="src">the certificate's date</div>
+          <img src="ev_date.png" alt="Certificate date 08/26/2026" style="max-width:100%;border:1px solid var(--line);border-radius:6px"/>
+        </div>
+      </div>
+      <div>
+        <div class="excerpt" style="padding:10px"><div class="src">the coverage it certifies</div>
+          <img src="ev_period.png" alt="Policy period 01/22/2025 to 01/22/2026" style="max-width:100%;border:1px solid var(--line);border-radius:6px"/>
+        </div>
+      </div>
     </div>
-    <p class="why">A NAIC number is a government regulator's unique ID for an insurance company. The policy
-       on file doesn't contain one — the AI supplied it from memory and printed it on the certificate as if it
-       were fact. It happens to be a real number, which is worse, not better: a confident, plausible, unverifiable
-       value in the insurer field of a legal document. Both models did this, on every run.</p>
+    <p class="why">A certificate dated <b>08/26/2026</b>, attesting coverage that ended <b>01/22/2026</b> —
+       seven months earlier. The one thing this document exists to prove is that coverage is in force on the
+       date it's issued, and this one fails that test on its own face. Nothing in the pipeline checked. Handed
+       to a contractor, this paper says a business is insured. It isn't.</p>
   </div>
 
-  <div class="card goodcard" style="margin-top:16px">
-    <div class="tagline">THE PATTERN · WHY A BIGGER MODEL ISN'T THE FIX</div>
-    <h3>A better model doesn't fix this</h3>
-    <p>You might expect the expensive model to be the safe one. It isn't, consistently. On the expired policy,
-       Opus 5 <b>did</b> catch the problem and refuse — but the default model (Gemini 3.7 Flash), the one that runs at volume,
-       issued the certificate silently. And the invented NAIC number appeared on <b>both</b> models, every single
-       run — the most capable one included. So upgrading the model bought you one catch, on one check, and nothing else.
-       The behavior you can't predict in advance is the behavior you can't rely on. What a legal document needs
-       isn't a smarter writer — it's a check that runs the same way every time, regardless of which model wrote
-       the values or how expensive it was. That check is Step 3.</p>
+  <div class="card" style="margin-top:16px">
+    <div class="tagline">THE POINT ISN'T THAT THE MODEL IS BAD</div>
+    <h3>It's that nothing guarantees the output</h3>
+    <p>Language models generate plausible documents; they don't <b>guarantee</b> that every value traces to the
+       source file, or that the finished document satisfies the rules a human desk would check — like whether
+       the coverage is actually in force. Most runs come out fine. But in an industry where the mistakes are
+       expensive — where a certificate is relied on, litigated over, and owned by the agency that issued it —
+       "usually fine" isn't a control. Grounding has to be structural: every value pinned to a sentence in the
+       source, every document validated by code that runs the same way every time, and anything that fails
+       <b>stopped before it ships</b>. That's the layer below — and it blocks this exact certificate. Run it.</p>
   </div>
-</div></section>
-
-<!-- REPRODUCE -->
-<section><div class="wrap">
-  <span class="step">REPRODUCE IT</span>
-  <span class="step-sub">Run the same test in your own GailGPT.</span>
-  <h2>Run it in your own GailGPT</h2>
-  <p class="lead">Two test cases that use the <b>exact same prompt</b> — the only thing that changes is which
-     policy you upload (in-force or expired). AI output varies from run to run, which is itself part of what we
-     found: you can't count on getting the same answer twice. So run each case a few times in a fresh
-     conversation and save the PDFs.</p>
-
-  <div class="card">
-    <h3>Setup (once)</h3>
-    <p>Set up a test agency in Gail — ours is <i>Bayline Insurance Services, 1200 Harbor Blvd, Suite 210,
-       San Mateo, CA 94402</i> — with one commercial customer, <i>Paws and Provisions LLC</i>. The agency is the
-       producer on the certificate; the customer is the insured. Then use their policy as the document:</p>
-    <div class="doc-btns">
-      <a id="dlPol" target="_blank">policy — coverage in force ↗</a>
-      <a id="dlPolV" target="_blank">policy — coverage expired ↗</a>
-      <a id="dlReq" target="_blank">the certificate request ↗</a>
-    </div>
-    <p class="note">Two versions of the same policy are provided — an in-force one and an expired one.
-       You upload <b>one or the other</b> depending on the case below, never both.</p>
-  </div>
-
-  <div class="cards" style="margin-top:14px">
-    <div class="card badcard">
-      <div class="tagline">CASE 1 · IN-FORCE POLICY · THE INVENTED NAIC NUMBER</div>
-      <h3>Upload the in-force policy</h3>
-      <div class="prompt">Generate a Certificate of Insurance for Paws and Provisions LLC. Certificate holder: Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131. List Acme as additional insured with a waiver of subrogation per the subcontract.</div>
-      <p class="why">What to look for (both models, every run): the insurer's <b>NAIC number 19682</b> printed on
-         the certificate, though that number appears nowhere in the policy. On our runs the skill also often needed
-         several re-prompts before it would produce the PDF at all.</p>
-    </div>
-    <div class="card badcard">
-      <div class="tagline">CASE 2 · EXPIRED POLICY · THE COVERAGE DIVERGENCE</div>
-      <h3>Upload the expired policy</h3>
-      <div class="prompt">Generate a Certificate of Insurance for Paws and Provisions LLC. Certificate holder: Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131. List Acme as additional insured with a waiver of subrogation per the subcontract.</div>
-      <p class="why">Same prompt as Case 1 — only the uploaded policy changed. What to look for: the <b>default
-         model (Gemini 3.7 Flash) issues the certificate silently</b>, certifying coverage that ended seven months
-         earlier. <b>Opus 5 catches it</b> and refuses — “the policy on file is expired… I can't issue this
-         certificate.” The safety shows up on one model, not the one that runs by default.</p>
-    </div>
-  </div>
-
 </div></section>
 
 <!-- STEP 3: RUN THE GUARD -->
 <section><div class="wrap">
-  <span class="step">STEP 3 — THE FIX</span>
-  <span class="step-sub">The verification layer, running live. Pick a policy and watch every value get checked.</span>
-  <h2>Now run the checking layer on the same file — live</h2>
-  <p class="lead">Every value that reaches the certificate has to trace back to a real sentence in the source
-     policy, and deterministic code makes the final call. The layer <b>approves</b> a certificate when the policy
-     backs everything on it, and <b>stops</b> one when it doesn't — here, an expired policy, and fabricated values
-     forced straight into the checker.</p>
+  <span class="step">STEP 3 — THE DEMO</span>
+  <span class="step-sub">The verification layer, running live. This is the part to try.</span>
+  <h2>Run the layer yourself — live</h2>
+  <p class="lead">The model may only <b>propose</b> a value with the exact sentence from the source that supports
+     it; deterministic code verifies the quote, runs the checks a human desk would run, and makes the final call.
+     The layer <b>approves</b> a certificate when the policy backs everything on it — and <b>stops</b> the ones
+     that should never ship: the expired policy from Step 2, and unsupported values forced straight into the
+     checker. Every run ends with a finished document and a receipt for every value on it.</p>
+  <p class="note" style="margin-bottom:14px">The source documents the demo runs on:
+     <a id="dlPol" target="_blank">the policy ↗</a> &nbsp;·&nbsp; <a id="dlReq" target="_blank">the certificate request ↗</a></p>
 
   <div class="controls" >
     <div class="fld"><label>Input</label>
@@ -279,8 +230,8 @@
     <p style="margin:0">Back in Step 1, Acme asked to be named additional insured with a waiver of subrogation —
        and this policy carries neither endorsement. So what stops a certificate from claiming them anyway? This run
        finds out. It <b>bypasses the AI entirely</b> and force-feeds the checker the values a careless system might
-       produce: those two endorsement boxes checked <b>“yes,”</b> plus an invented NAIC number and a made-up
-       producer code. The question is simply <b>“can a value the policy doesn't support get onto the certificate?”</b>
+       produce: those two endorsement boxes checked <b>“yes,”</b> with no endorsement on the policy to back them.
+       The question is simply <b>“can a value the policy doesn't support get onto the certificate?”</b>
        Watch each one get blocked below — the endorsement boxes on the specific grounds that
        <i>the policy carries no such endorsement, so it cannot be certified.</i> That is the protection Acme's
        request needed, enforced by code instead of left to the model's judgment.</p>
@@ -307,12 +258,13 @@
 <section><div class="wrap">
   <span class="step">WHY IT MATTERS</span>
   <span class="step-sub">Where this fits with what you've already built.</span>
-  <h2>Every value is checked against the policy. Every certificate gets a clear decision.</h2>
-  <p class="lead">A made-up value has no real sentence to point to, so it can't reach the form — on any model.
-     A claim on dead coverage is stopped, not sent with a buried note. And the finished form carries a
-     traceable source for every value: which document, which sentence. The layer outputs the same data format Gail's
-     existing certificate skill already consumes — it's not a replacement for anything, it's the checking
-     stage in front of it.</p>
+  <h2>Expensive mistakes, made structurally impossible</h2>
+  <p class="lead">An unsupported value has no real sentence to point to, so it can't reach the form — on any
+     model, however confident. A certificate on lapsed coverage is stopped with the reason printed on it, not
+     shipped with a buried note. And the finished document carries a receipt for every value: which source,
+     which sentence — the audit trail an expensive-mistake industry needs. It outputs the same data format
+     Gail's certificate skill already consumes, so it's not a replacement for anything you've built — it's the
+     grounding layer in front of it.</p>
 </div></section>
 
 <footer><div class="wrap">
@@ -326,7 +278,7 @@
 const API_BASE = "https://acord-guard.onrender.com";   // <-- CHANGE THIS FOR DEPLOY
 const API = localStorage.getItem("ACORD_API") || API_BASE;
 document.getElementById("apinote").textContent = " · backend: " + API;
-for (const [id,path] of [["polDoc","/corpus/policy-inforce"],["reqDoc","/corpus/request"],["dlPol","/corpus/policy-inforce"],["dlPolV","/corpus/policy-expired"],["dlReq","/corpus/request"]])
+for (const [id,path] of [["polDoc","/corpus/policy-inforce"],["reqDoc","/corpus/request"],["dlPol","/corpus/policy-inforce"],["dlReq","/corpus/request"]])
   document.getElementById(id).href = API + path;
 
 const FIELD = {producer_name:"Producer (agency)",producer_address:"Producer address",producer_phone:"Producer phone",
@@ -355,10 +307,13 @@ const SCEN_DESC = {
     +"certificate traces back to a real line in the policy. Nothing is missing, nothing is invented, so the layer "
     +"<b>approves it</b>. This is the case that shows the layer says yes to a valid certificate — it isn't just a "
     +"machine that blocks things.",
-  "expired": "<b>Expired policy.</b> Everything is the same except the coverage dates — this policy lapsed before "
-    +"the certificate date. The layer <b>blocks the certificate</b>: you can't prove coverage that has already ended.",
-  "fabrication": "<b>The stress test.</b> The AI is bypassed and the checker is force-fed deliberately fabricated "
-    +"values — an invented NAIC number, a made-up producer code, and endorsement boxes with no backing. Each is "
+  "expired": "<b>The expired policy — the situation from Step 2.</b> Coverage ended 01/22/2026, and the "
+    +"certificate would be dated today. The layer runs the check that was missing: is coverage in force on the "
+    +"certificate date? It isn't — so the certificate is <b>blocked</b>, with the reason printed on it. The "
+    +"invalid document from Step 2 cannot come out of this system.",
+  "fabrication": "<b>The stress test.</b> The AI is bypassed and the checker is force-fed the values a careless "
+    +"system might produce — the additional-insured and waiver boxes marked “yes” with no endorsement on the policy "
+    +"to back them. Each is "
     +"caught and the certificate <b>blocked</b>. This proves the guarantee holds even against values a careless "
     +"system might produce."};
 function renderScenDesc(){document.getElementById("scenDesc").innerHTML = SCEN_DESC[scenSel.value] || "";}
@@ -377,6 +332,8 @@ document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{mode=b.datas
   document.getElementById("redteamNote").style.display =
     (mode!=="upload" && document.getElementById("scenario").value==="fabrication")?"block":"none";});
 
+let RUNVALS=[];
+function fnv(s){let x=0x811c9dc5;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,0x01000193)>>>0;}return x.toString(16).padStart(8,"0");}
 const stream=document.getElementById("stream"),banner=document.getElementById("banner"),
   summary=document.getElementById("summary"),links=document.getElementById("links");
 
@@ -409,7 +366,7 @@ function handle(e){
   switch(e.type){
     case "start":
       if(e.scenario==="fabrication")
-        say("info","▶",`<b>Stress test:</b> the AI is bypassed. Force-feeding the checker the values a careless system might produce — the additional-insured and waiver boxes Acme asked for (with no endorsement on the policy to back them), plus an invented NAIC number and a made-up producer code. Each should be blocked below.`);
+        say("info","▶",`<b>Stress test:</b> the AI is bypassed. Force-feeding the checker the values a careless system might produce — the additional-insured and waiver boxes Acme asked for, marked “yes” with no endorsement on the policy to back them. Each should be blocked below.`);
       else
         say("info","▶",`Running the <b>${e.scenario}</b> situation — <b>${e.tier==="recorded"?"saved run":e.tier}</b> suggests the values.`);break;
     case "sources":
@@ -436,6 +393,7 @@ function handle(e){
       if(document.getElementById("scenario").value==="fabrication") break; // already narrated via 'injected'
       say("info","💡",`<b>${e.model}</b> suggested <b>${e.count}</b> values for the form${e.via!=="live"?" <i>(replayed from a saved real run)</i>":""}. Now checking each one against the file…`);break;
     case "verdict":{
+      if(e.status&&(e.status.startsWith("VERIFIED")||e.status==="CONFIG"))RUNVALS.push(e.field+"="+e.value);
       const label=FIELD[e.field]||e.field, src=SRC[e.source]||e.source;
       if(e.status==="VERIFIED")
         say("ok","✓",`<b>${label}</b>: ${e.value}<span class="q">backed by ${src}: “${e.quote}”</span>`);
@@ -461,6 +419,8 @@ function handle(e){
       if(e.missing_required.length)s+=` <b>${e.missing_required.map(f=>FIELD[f]||f).join(", ")}</b> — a question for the caller.`;
       if(e.rejected.length)s+=`<br>Suggestions rejected as unsupported: <b>${e.rejected.map(f=>FIELD[f]||f).join(", ")}</b>.`;
       summary.innerHTML=s+`<br><span class="note">${e.via==="live"?"live model run":"saved run (labeled)"} · ${e.elapsed_ms} ms</span>`;
+      {const fp=fnv(RUNVALS.sort().join("|"));
+      summary.innerHTML+=`<div style="margin-top:10px;padding:9px 12px;background:#eef2f7;border-radius:8px;font-size:13px">Document fingerprint: <b style="font-family:var(--mono)">${fp}</b><br><span class="note" style="margin-top:2px">A hash of every value on the finished certificate. <b>Run this again — the fingerprint won't change.</b> Same input, same document, every time. That's the property the raw model doesn't have.</span></div>`;}
       links.innerHTML=`<a class="pdfbtn" href="${API}${e.exhibit}" target="_blank">Open the finished document ↗</a>`;
       say("info","■",`Decision: <b>${banner.textContent}</b>.`);break;}
   }
