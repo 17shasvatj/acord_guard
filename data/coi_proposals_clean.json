@@ -91,14 +91,16 @@
  },
  {
   "field": "additional_insured",
-  "source": "request",
-  "value": "Y",
-  "span": "List Acme as additional insured with a waiver of subrogation per the subcontract"
+  "source": "policy",
+  "value": "No",
+  "derived": true,
+  "span": "No additional-insured endorsement on file. No waiver of subrogation on file."
  },
  {
   "field": "waiver_subrogation",
-  "source": "request",
-  "value": "Y",
-  "span": "List Acme as additional insured with a waiver of subrogation per the subcontract"
+  "source": "policy",
+  "value": "No",
+  "derived": true,
+  "span": "No additional-insured endorsement on file. No waiver of subrogation on file."
  }
 ]

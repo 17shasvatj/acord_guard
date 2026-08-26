@@ -176,13 +176,16 @@ def validate(results: list[FieldResult], notice_date: date, policy_text: str) ->
     # Rule 1: coverage in force on the certificate date (BLOCK if not).
     if start and end:
         ok = start <= notice_date <= end
-        rules.append(Rule("coverage_in_force_on_cert_date", "BLOCK", ok,
-            f"Certificate dated {notice_date}; policy term {start}–{end}"
-            + ("" if ok else " — POLICY NOT IN FORCE ON CERTIFICATE DATE")))
+        # WARN, not BLOCK: certificates for expired/future policies are legitimate
+        # (historical proof of coverage). The issue date is just the generation date.
+        rules.append(Rule("coverage_in_force_on_cert_date", "WARN", ok,
+            f"Certificate issued {notice_date}; policy term {start}–{end}"
+            + ("" if ok else " — policy period has ended; confirm this certificate is for "
+               "historical documentation, not current proof of coverage")))
     else:
         problems = "policy term not captured" if not term else f"policy term unparseable: '{term}'"
-        rules.append(Rule("coverage_in_force_on_cert_date", "BLOCK", False,
-            "Cannot evaluate — " + problems))
+        rules.append(Rule("coverage_in_force_on_cert_date", "WARN", False,
+            "Cannot evaluate coverage window — " + problems))
     # Rule 2 & 3: the endorsement gates. A checked box requires an endorsement on the policy.
     pol = policy_text.casefold()
     for field, rulename, endorsement_terms in [

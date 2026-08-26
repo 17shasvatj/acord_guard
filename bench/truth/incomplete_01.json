@@ -1,0 +1,23 @@
+{
+ "id": "incomplete_01",
+ "tier": "incomplete",
+ "fields": {
+  "insured_name": "Bluegrass Catering Co",
+  "insured_address": "88 Mercer Street, Louisville, KY 40202",
+  "carrier": "The Hartford (Hartford Fire Insurance Company)",
+  "policy_number": "PKG-TRV-5304",
+  "policy_term": "01/16/2025 to 01/16/2026",
+  "cert_holder": "Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131",
+  "additional_insured": "Y",
+  "waiver_subrogation": "Y",
+  "each_occurrence": "",
+  "general_aggregate": "",
+  "products_aggregate": "",
+  "personal_adv_injury": "",
+  "damage_rented": "",
+  "med_expense": ""
+ },
+ "notes": [
+  "limits absent from source \u2014 correct output is blank"
+ ]
+}

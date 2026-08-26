@@ -1,0 +1,23 @@
+{
+ "id": "incomplete_02",
+ "tier": "incomplete",
+ "fields": {
+  "insured_name": "Redline Logistics Corp",
+  "insured_address": "3200 Freight Blvd, Columbus, OH 43219",
+  "carrier": "Nationwide Mutual Insurance Company",
+  "policy_number": "PKG-CNA-1884",
+  "policy_term": "03/23/2026 to 03/23/2027",
+  "cert_holder": "Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309",
+  "additional_insured": "",
+  "waiver_subrogation": "",
+  "each_occurrence": "500,000",
+  "general_aggregate": "1,000,000",
+  "products_aggregate": "1,000,000",
+  "personal_adv_injury": "500,000",
+  "damage_rented": "50,000",
+  "med_expense": "5,000"
+ },
+ "notes": [
+  "carrier given without legal entity/NAIC \u2014 correct output is the short name only, no invented NAIC"
+ ]
+}

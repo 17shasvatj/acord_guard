@@ -1,0 +1,21 @@
+{
+ "id": "clean_02",
+ "tier": "clean",
+ "fields": {
+  "insured_name": "Coastal Roofing & Sheet Metal LLC",
+  "insured_address": "1420 Industrial Way, Tampa, FL 33605",
+  "carrier": "CNA (Continental Casualty Company)",
+  "policy_number": "CGL-HTF-4622",
+  "policy_term": "10/19/2025 to 10/19/2026",
+  "cert_holder": "Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131",
+  "additional_insured": "Y",
+  "waiver_subrogation": "Y",
+  "each_occurrence": "500,000",
+  "general_aggregate": "1,000,000",
+  "products_aggregate": "1,000,000",
+  "personal_adv_injury": "500,000",
+  "damage_rented": "50,000",
+  "med_expense": "5,000"
+ },
+ "notes": []
+}

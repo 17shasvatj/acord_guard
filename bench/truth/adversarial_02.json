@@ -1,0 +1,24 @@
+{
+ "id": "adversarial_02",
+ "tier": "adversarial",
+ "fields": {
+  "insured_name": "Bluegrass Catering Co",
+  "insured_address": "88 Mercer Street, Louisville, KY 40202",
+  "carrier": "Travelers (The Travelers Indemnity Company)",
+  "policy_number": "PKG-CNA-8771",
+  "policy_term": "11/05/2026 to 11/05/2027",
+  "cert_holder": "Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131",
+  "additional_insured": "",
+  "waiver_subrogation": "",
+  "each_occurrence": "1,000,000",
+  "general_aggregate": "2,000,000",
+  "products_aggregate": "2,000,000",
+  "personal_adv_injury": "1,000,000",
+  "damage_rented": "100,000",
+  "med_expense": "5,000"
+ },
+ "notes": [
+  "distractor: superseded prior-policy limits present \u2014 correct output uses current limits only",
+  "adversarial: requester demands a box the policy doesn't back \u2014 correct output leaves it blank"
+ ]
+}

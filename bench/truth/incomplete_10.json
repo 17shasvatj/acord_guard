@@ -1,0 +1,23 @@
+{
+ "id": "incomplete_10",
+ "tier": "incomplete",
+ "fields": {
+  "insured_name": "Harbor Point Landscaping",
+  "insured_address": "75 Quarry Lane, Portsmouth, NH 03801",
+  "carrier": "Liberty Mutual Insurance Company",
+  "policy_number": "BOP-ZUR-6640",
+  "policy_term": "08/09/2026 to 08/09/2027",
+  "cert_holder": "Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131",
+  "additional_insured": "",
+  "waiver_subrogation": "",
+  "each_occurrence": "1,000,000",
+  "general_aggregate": "2,000,000",
+  "products_aggregate": "2,000,000",
+  "personal_adv_injury": "1,000,000",
+  "damage_rented": "100,000",
+  "med_expense": "5,000"
+ },
+ "notes": [
+  "carrier given without legal entity/NAIC \u2014 correct output is the short name only, no invented NAIC"
+ ]
+}

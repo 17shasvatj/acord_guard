@@ -1,0 +1,21 @@
+{
+ "id": "clean_01",
+ "tier": "clean",
+ "fields": {
+  "insured_name": "Bluegrass Catering Co",
+  "insured_address": "88 Mercer Street, Louisville, KY 40202",
+  "carrier": "CNA (Continental Casualty Company)",
+  "policy_number": "BOP-HTF-7955",
+  "policy_term": "07/03/2026 to 07/03/2027",
+  "cert_holder": "Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131",
+  "additional_insured": "Y",
+  "waiver_subrogation": "Y",
+  "each_occurrence": "1,000,000",
+  "general_aggregate": "2,000,000",
+  "products_aggregate": "2,000,000",
+  "personal_adv_injury": "1,000,000",
+  "damage_rented": "100,000",
+  "med_expense": "5,000"
+ },
+ "notes": []
+}

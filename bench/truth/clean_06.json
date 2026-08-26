@@ -1,0 +1,21 @@
+{
+ "id": "clean_06",
+ "tier": "clean",
+ "fields": {
+  "insured_name": "Harbor Point Landscaping",
+  "insured_address": "75 Quarry Lane, Portsmouth, NH 03801",
+  "carrier": "Travelers (The Travelers Indemnity Company)",
+  "policy_number": "CGL-ZUR-8353",
+  "policy_term": "09/16/2026 to 09/16/2027",
+  "cert_holder": "Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131",
+  "additional_insured": "Y",
+  "waiver_subrogation": "Y",
+  "each_occurrence": "1,000,000",
+  "general_aggregate": "2,000,000",
+  "products_aggregate": "2,000,000",
+  "personal_adv_injury": "1,000,000",
+  "damage_rented": "100,000",
+  "med_expense": "5,000"
+ },
+ "notes": []
+}

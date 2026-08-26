@@ -18,7 +18,7 @@ from pathlib import Path
 from engine import load_sources, verify_proposals, validate, decide, SCHEMA, FieldResult
 HERE = Path(__file__).parent
 OUT = HERE / "out"; OUT.mkdir(exist_ok=True)
-NOTICE_DATE = date(2026, 8, 25)
+NOTICE_DATE = date.today()   # ACORD issue date = generation date
 
 SCEN = {
     "fabrication": dict(policy="coi_policy_inforce.pdf", proposals="coi_proposals_fabrication.json"),
@@ -43,9 +43,9 @@ def write_outputs(results, rules, status, tag: str):
         "fields": [vars(r) for r in results], "validations": [vars(ru) for ru in rules]}
     mpath = OUT / f"manifest_{tag}.json"
     mpath.write_text(json.dumps(manifest, indent=2))
-    fpath = OUT / f"loss_notice_{tag}.pdf"
-    import form_render
-    form_render.render(results, rules, status, fpath)
+    fpath = OUT / f"certificate_{tag}.pdf"
+    import acord25_render
+    acord25_render.render_from_results(results, rules, str(fpath), NOTICE_DATE)
     print(f"\nWrote: {fpath.name}, {mpath.name}")
     return fpath, mpath
 

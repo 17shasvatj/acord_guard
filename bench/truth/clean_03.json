@@ -1,0 +1,21 @@
+{
+ "id": "clean_03",
+ "tier": "clean",
+ "fields": {
+  "insured_name": "Summit Electrical Services Inc",
+  "insured_address": "610 Alder Road, Boise, ID 83702",
+  "carrier": "Travelers (The Travelers Indemnity Company)",
+  "policy_number": "PKG-ZUR-3961",
+  "policy_term": "10/10/2025 to 10/10/2026",
+  "cert_holder": "Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309",
+  "additional_insured": "Y",
+  "waiver_subrogation": "Y",
+  "each_occurrence": "1,000,000",
+  "general_aggregate": "2,000,000",
+  "products_aggregate": "2,000,000",
+  "personal_adv_injury": "1,000,000",
+  "damage_rented": "100,000",
+  "med_expense": "5,000"
+ },
+ "notes": []
+}

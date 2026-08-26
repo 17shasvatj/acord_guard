@@ -1,0 +1,21 @@
+{
+ "id": "clean_00",
+ "tier": "clean",
+ "fields": {
+  "insured_name": "Bluegrass Catering Co",
+  "insured_address": "88 Mercer Street, Louisville, KY 40202",
+  "carrier": "Liberty Mutual Insurance Company",
+  "policy_number": "PKG-HTF-6991",
+  "policy_term": "02/27/2025 to 02/27/2026",
+  "cert_holder": "Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309",
+  "additional_insured": "",
+  "waiver_subrogation": "",
+  "each_occurrence": "500,000",
+  "general_aggregate": "1,000,000",
+  "products_aggregate": "1,000,000",
+  "personal_adv_injury": "500,000",
+  "damage_rented": "50,000",
+  "med_expense": "5,000"
+ },
+ "notes": []
+}

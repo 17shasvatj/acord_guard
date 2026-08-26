@@ -195,7 +195,7 @@ async def run(request: Request,
 
 @app.get("/exhibit/{tag}")
 def exhibit(tag: str):
-    p = OUT / f"loss_notice_{tag}.pdf"
+    p = OUT / f"certificate_{tag}.pdf"
     return FileResponse(p, media_type="application/pdf") if p.exists() \
         else JSONResponse({"error": "not found"}, status_code=404)
 

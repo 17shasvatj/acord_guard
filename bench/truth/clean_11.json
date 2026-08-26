@@ -1,0 +1,21 @@
+{
+ "id": "clean_11",
+ "tier": "clean",
+ "fields": {
+  "insured_name": "Bluegrass Catering Co",
+  "insured_address": "88 Mercer Street, Louisville, KY 40202",
+  "carrier": "Liberty Mutual Insurance Company",
+  "policy_number": "CGL-HTF-3725",
+  "policy_term": "07/28/2026 to 07/28/2027",
+  "cert_holder": "Cascade Development Partners, 812 Pine Street, Seattle, WA 98101",
+  "additional_insured": "",
+  "waiver_subrogation": "",
+  "each_occurrence": "1,000,000",
+  "general_aggregate": "2,000,000",
+  "products_aggregate": "2,000,000",
+  "personal_adv_injury": "1,000,000",
+  "damage_rented": "100,000",
+  "med_expense": "5,000"
+ },
+ "notes": []
+}

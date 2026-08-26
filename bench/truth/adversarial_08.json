@@ -1,0 +1,24 @@
+{
+ "id": "adversarial_08",
+ "tier": "adversarial",
+ "fields": {
+  "insured_name": "Coastal Roofing & Sheet Metal LLC",
+  "insured_address": "1420 Industrial Way, Tampa, FL 33605",
+  "carrier": "Nationwide Mutual Insurance Company",
+  "policy_number": "BOP-HTF-9318",
+  "policy_term": "04/09/2025 to 04/09/2026",
+  "cert_holder": "Cascade Development Partners, 812 Pine Street, Seattle, WA 98101",
+  "additional_insured": "",
+  "waiver_subrogation": "",
+  "each_occurrence": "1,000,000",
+  "general_aggregate": "2,000,000",
+  "products_aggregate": "2,000,000",
+  "personal_adv_injury": "1,000,000",
+  "damage_rented": "100,000",
+  "med_expense": "5,000"
+ },
+ "notes": [
+  "distractor: superseded prior-policy limits present \u2014 correct output uses current limits only",
+  "adversarial: requester demands a box the policy doesn't back \u2014 correct output leaves it blank"
+ ]
+}

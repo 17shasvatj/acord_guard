@@ -139,41 +139,22 @@
 <!-- STEP 2: THE PROBLEM -->
 <section><div class="wrap">
   <span class="step">STEP 2 — WHY GROUNDING MATTERS</span>
-  <span class="step-sub">One real example, and the structural gap behind it.</span>
-  <h2>An AI-generated certificate, invalid on its own face</h2>
-  <p class="lead">We asked GailGPT for a certificate against a policy whose coverage ran
-     <b>01/22/2025 – 01/22/2026</b>. Here is the actual document it produced — look at the two dates together:</p>
+  <span class="step-sub">The structural gap in AI-generated documents.</span>
+  <h2>Nothing guarantees that a generated value came from the policy</h2>
+  <p class="lead">A language model generates plausible documents; it doesn't <b>guarantee</b> that every value
+     traces to the source file, that missing information stays blank instead of being filled from training
+     memory, or that the finished form passes the checks a human desk would run. Most runs come out fine.
+     But insurance is an expensive-mistake industry — a certificate is relied on, litigated over, and owned
+     by the agency that issued it. "Usually fine" isn't a control.</p>
 
-  <div class="card badcard">
-    <div class="tagline">GAILGPT'S ACTUAL OUTPUT · ONE OF OUR TEST RUNS</div>
-    <div class="cards" style="margin-top:8px">
-      <div>
-        <div class="excerpt" style="padding:10px"><div class="src">the certificate's date</div>
-          <img src="ev_date.png" alt="Certificate date 08/26/2026" style="max-width:100%;border:1px solid var(--line);border-radius:6px"/>
-        </div>
-      </div>
-      <div>
-        <div class="excerpt" style="padding:10px"><div class="src">the coverage it certifies</div>
-          <img src="ev_period.png" alt="Policy period 01/22/2025 to 01/22/2026" style="max-width:100%;border:1px solid var(--line);border-radius:6px"/>
-        </div>
-      </div>
-    </div>
-    <p class="why">A certificate dated <b>08/26/2026</b>, attesting coverage that ended <b>01/22/2026</b> —
-       seven months earlier. The one thing this document exists to prove is that coverage is in force on the
-       date it's issued, and this one fails that test on its own face. Nothing in the pipeline checked. Handed
-       to a contractor, this paper says a business is insured. It isn't.</p>
-  </div>
-
-  <div class="card" style="margin-top:16px">
-    <div class="tagline">THE POINT ISN'T THAT THE MODEL IS BAD</div>
-    <h3>It's that nothing guarantees the output</h3>
-    <p>Language models generate plausible documents; they don't <b>guarantee</b> that every value traces to the
-       source file, or that the finished document satisfies the rules a human desk would check — like whether
-       the coverage is actually in force. Most runs come out fine. But in an industry where the mistakes are
-       expensive — where a certificate is relied on, litigated over, and owned by the agency that issued it —
-       "usually fine" isn't a control. Grounding has to be structural: every value pinned to a sentence in the
-       source, every document validated by code that runs the same way every time, and anything that fails
-       <b>stopped before it ships</b>. That's the layer below — and it blocks this exact certificate. Run it.</p>
+  <div class="card">
+    <div class="tagline">THE PRINCIPLE</div>
+    <h3>The model proposes. Code disposes.</h3>
+    <p>The layer below makes grounding structural. The model is not allowed to write on the document — it may
+       only <b>propose</b> a value together with the exact sentence from the source that supports it.
+       Deterministic code checks the sentence is really there and really contains the value, runs the desk
+       checks, and drops anything that fails. A value with no source has nothing to quote, so it cannot reach
+       the certificate — and every value that does carries a receipt: which document, which sentence.</p>
   </div>
 </div></section>
 
@@ -184,9 +165,9 @@
   <h2>Run the layer yourself — live</h2>
   <p class="lead">The model may only <b>propose</b> a value with the exact sentence from the source that supports
      it; deterministic code verifies the quote, runs the checks a human desk would run, and makes the final call.
-     The layer <b>approves</b> a certificate when the policy backs everything on it — and <b>stops</b> the ones
-     that should never ship: the expired policy from Step 2, and unsupported values forced straight into the
-     checker. Every run ends with a finished document and a receipt for every value on it.</p>
+     The layer <b>approves</b> a certificate when the policy backs everything on it — <b>warns</b> where a desk would
+     want a second look — like a policy whose coverage period has ended — and <b>stops</b> what should never
+     ship: unsupported values forced straight into the checker. Every run ends with a finished document and a receipt for every value on it.</p>
   <p class="note" style="margin-bottom:14px">The source documents the demo runs on:
      <a id="dlPol" target="_blank">the policy ↗</a> &nbsp;·&nbsp; <a id="dlReq" target="_blank">the certificate request ↗</a></p>
 
@@ -259,8 +240,8 @@
   <span class="step-sub">Where this fits with what you've already built.</span>
   <h2>Expensive mistakes, made structurally impossible</h2>
   <p class="lead">An unsupported value has no real sentence to point to, so it can't reach the form — on any
-     model, however confident. A certificate on lapsed coverage is stopped with the reason printed on it, not
-     shipped with a buried note. And the finished document carries a receipt for every value: which source,
+     model, however confident. A certificate on a lapsed policy carries a
+     prominent warning rather than a buried note. And the finished document carries a receipt for every value: which source,
      which sentence — the audit trail an expensive-mistake industry needs. It outputs the same data format
      Gail's certificate skill already consumes, so it's not a replacement for anything you've built — it's the
      grounding layer in front of it.</p>
@@ -274,7 +255,7 @@
 <script>
 // DEPLOY: replace the placeholder with your Render backend URL before deploying the frontend.
 //   e.g. const API_BASE = "https://acord-guard-api.onrender.com";
-const API_BASE = "https://acord-guard.onrender.com";   // <-- CHANGE THIS FOR DEPLOY
+const API_BASE = "http://localhost:8000";   // <-- CHANGE THIS FOR DEPLOY
 const API = localStorage.getItem("ACORD_API") || API_BASE;
 document.getElementById("apinote").textContent = " · backend: " + API;
 for (const [id,path] of [["polDoc","/corpus/policy-inforce"],["reqDoc","/corpus/request"],["dlPol","/corpus/policy-inforce"],["dlReq","/corpus/request"]])
@@ -306,10 +287,11 @@ const SCEN_DESC = {
     +"certificate traces back to a real line in the policy. Nothing is missing, nothing is invented, so the layer "
     +"<b>approves it</b>. This is the case that shows the layer says yes to a valid certificate — it isn't just a "
     +"machine that blocks things.",
-  "expired": "<b>The expired policy — the situation from Step 2.</b> Coverage ended 01/22/2026, and the "
-    +"certificate would be dated today. The layer runs the check that was missing: is coverage in force on the "
-    +"certificate date? It isn't — so the certificate is <b>blocked</b>, with the reason printed on it. The "
-    +"invalid document from Step 2 cannot come out of this system.",
+  "expired": "<b>The expired policy.</b> Coverage ended 01/22/2026; the certificate is issued today. "
+    +"Certificates for lapsed policies are legitimate — they document historical coverage — so the layer "
+    +"<b>issues</b> the certificate but attaches a prominent <b>warning</b>: the policy period has ended, "
+    +"confirm this is for historical documentation rather than current proof of coverage. The dates on the "
+    +"face are the policy's real dates, verified against the source.",
   "fabrication": "<b>The stress test.</b> The AI is bypassed and the checker is force-fed the values a careless "
     +"system might produce — the additional-insured and waiver boxes marked “yes” with no endorsement on the policy "
     +"to back them. Each is "
