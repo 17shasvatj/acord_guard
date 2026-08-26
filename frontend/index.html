@@ -318,7 +318,7 @@
 <script>
 // DEPLOY: replace the placeholder with your Render backend URL before deploying the frontend.
 //   e.g. const API_BASE = "https://acord-guard-api.onrender.com";
-const API_BASE = "http://localhost:8000";   // <-- CHANGE THIS FOR DEPLOY
+const API_BASE = "https://acord-guard.onrender.com";   // <-- CHANGE THIS FOR DEPLOY
 const API = localStorage.getItem("ACORD_API") || API_BASE;
 document.getElementById("apinote").textContent = " · backend: " + API;
 for (const [id,path] of [["polDoc","/corpus/policy-inforce"],["reqDoc","/corpus/request"],["dlPol","/corpus/policy-inforce"],["dlPolV","/corpus/policy-expired"],["dlReq","/corpus/request"]])
