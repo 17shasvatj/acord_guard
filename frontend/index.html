@@ -257,11 +257,11 @@
 <section><div class="wrap">
   <span class="step">STEP 3</span>
   <h2>Now run the checking layer on the same file — live</h2>
-  <p class="lead">The certificate request never changes — Acme always asks to be added as additional insured
-     with a waiver of subrogation. The only thing that changes below is <b>the policy</b>. The model may only
-     <b>suggest</b> a value with the exact sentence from the policy that supports it; code checks the sentence
-     is really there, confirms coverage is in force, and refuses to certify any box the policy doesn't back.
-     Watch what the layer does with the same request against each policy:</p>
+  <p class="lead">Every value that reaches the certificate has to trace back to a real sentence in the source
+     policy, and deterministic code makes the final call. The three runs below show the layer doing three
+     different jobs: <b>issuing</b> a valid certificate when everything checks out, <b>blocking</b> one when
+     coverage has expired, and <b>catching fabricated values</b> — including endorsement boxes the policy
+     doesn't back — when they're forced in.</p>
 
   <div class="controls">
     <div class="fld"><label>Which situation?</label>
