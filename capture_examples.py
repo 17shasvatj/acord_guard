@@ -69,19 +69,27 @@ def main():
     acord25_render.render_from_results(
         raw_results, [], str(OUT / f"{cid}_raw.pdf"))
 
-    # Render GROUNDED arm certificate via the real verifier (for receipts)
+    # Verify (the grounded render with decision + flagged happens below)
     verified = engine.verify_proposals(proposals, sources)
     rules = engine.validate(verified, __import__("pipeline").NOTICE_DATE,
                             sources["policy"])
-    acord25_render.render_from_results(
-        verified, rules, str(OUT / f"{cid}_grounded.pdf"))
 
     # Capture the GROUNDED decision: did it issue, hold, or block? Which fields
     # were rejected as fabrication attempts, and why? This is the exhibit that
     # shows the verifier REFUSING rather than silently blanking.
     status, missing_req, rejected, blocks = engine.decide(verified, rules)
-    rejected_detail = [dict(field=r.name, status=r.status, reason=r.detail)
+    rejected_detail = [dict(field=r.name, status=r.status, reason=r.reason)
                        for r in rejected]
+
+    # Render GROUNDED certificate WITH the decision + flagged fields, so a held
+    # document is visibly stamped rather than a clean-looking blank cert.
+    from acord25_render import FIELD_LABELS as _FL
+    flagged = [dict(field=r["field"],
+                    label=_FL.get(r["field"], r["field"]),
+                    reason=r["reason"]) for r in rejected_detail]
+    acord25_render.render_from_results(
+        verified, rules, str(OUT / f"{cid}_grounded.pdf"),
+        decision=status, flagged=flagged)
 
     # Field-by-field comparison for the brief
     comp = []

@@ -47,12 +47,43 @@ def _yes(fields: dict, key: str) -> bool:
 
 def render_acord25(path: str, fields: dict, receipts: list[dict],
                    warnings: list[str], issue_date: date | None = None,
-                   cert_number: str | None = None) -> None:
+                   cert_number: str | None = None,
+                   decision: str = "READY_TO_SUBMIT",
+                   flagged: list[dict] | None = None) -> None:
     """fields: flat dict of verified values (unverified fields absent/None ->
     rendered blank). receipts: [{field,label,source,quote}]. warnings: rule
-    warnings for the addendum."""
+    warnings for the addendum. decision: engine decision status — when not
+    READY, a prominent HELD/BLOCKED banner is stamped and flagged fields are
+    called out so the document cannot be mistaken for issuable. flagged:
+    [{field,label,reason}] the fields that could not be verified."""
     issue_date = issue_date or date.today()
+    flagged = flagged or []
     c = canvas.Canvas(path, pagesize=letter)
+
+    held = decision not in ("READY_TO_SUBMIT",)
+    if held:
+        # Diagonal watermark across the whole page — impossible to mistake for
+        # an issuable certificate.
+        c.saveState()
+        c.setFont("Helvetica-Bold", 60)
+        c.setFillColorRGB(0.85, 0.20, 0.20, 0.18)
+        c.translate(W / 2, H / 2)
+        c.rotate(35)
+        label = "BLOCKED" if decision == "BLOCKED" else "HELD FOR REVIEW"
+        c.drawCentredString(0, 0, label)
+        c.restoreState()
+        # Solid banner strip at the very top.
+        c.setFillColorRGB(0.71, 0.14, 0.17)
+        c.rect(0, H - 0.34 * inch, W, 0.34 * inch, fill=1, stroke=0)
+        c.setFillColorRGB(1, 1, 1)
+        c.setFont("Helvetica-Bold", 11)
+        msg = ("NOT ISSUED — DOCUMENT BLOCKED" if decision == "BLOCKED"
+               else "NOT FOR ISSUANCE — HELD FOR REVIEW")
+        n = len(flagged)
+        if n:
+            msg += f"   ·   {n} value{'s' if n != 1 else ''} could not be verified against the policy"
+        c.drawCentredString(W / 2, H - 0.235 * inch, msg)
+        c.setFillColorRGB(0, 0, 0)
 
     def hline(y, x0=M, x1=W - M, w=0.7):
         c.setLineWidth(w); c.line(x0, y, x1, y)
@@ -235,21 +266,58 @@ def render_acord25(path: str, fields: dict, receipts: list[dict],
     tiny(c1 + 10, y8 - 20, "CLAIMS-MADE   [X] OCCUR")
     tiny(c1 + 3, y9 + 12, "GEN'L AGGREGATE LIMIT APPLIES PER:")
     tiny(c1 + 10, y9 + 4, "[X] POLICY    [ ] PROJECT    [ ] LOC")
+    flagged_names = {f.get("field") for f in flagged} if held else set()
+
+    def _flag_box(x0, y0, x1, y1):
+        """Amber highlight + red outline over a cell a flagged value would fill."""
+        c.saveState()
+        c.setFillColorRGB(1.0, 0.86, 0.20, 0.45)
+        c.rect(x0, y0, x1 - x0, y1 - y0, fill=1, stroke=0)
+        c.setStrokeColorRGB(0.71, 0.14, 0.17); c.setLineWidth(1.1)
+        c.rect(x0, y0, x1 - x0, y1 - y0, fill=0, stroke=1)
+        c.restoreState()
+
+    # Highlight flagged endorsement boxes in place (before drawing their marks)
+    if "additional_insured" in flagged_names:
+        _flag_box(c2 + 1, y9 + 1, c3 - 1, y8 - 1)
+    if "waiver_subrogation" in flagged_names:
+        _flag_box(c3 + 1, y9 + 1, c4 - 1, y8 - 1)
     if _yes(fields, "additional_insured"):
         text(c2 + 9, y8 - 0.5 * gl_h, "Y", size=8)
+    elif "additional_insured" in flagged_names:
+        c.setFillColorRGB(0.71, 0.14, 0.17)
+        text(c2 + 6, y8 - 0.5 * gl_h, "!", size=9, bold=True)
+        c.setFillColorRGB(0, 0, 0)
     if _yes(fields, "waiver_subrogation"):
         text(c3 + 9, y8 - 0.5 * gl_h, "Y", size=8)
+    elif "waiver_subrogation" in flagged_names:
+        c.setFillColorRGB(0.71, 0.14, 0.17)
+        text(c3 + 6, y8 - 0.5 * gl_h, "!", size=9, bold=True)
+        c.setFillColorRGB(0, 0, 0)
     text(c4 + 4, y8 - 0.5 * gl_h, _val(fields, "policy_number"), size=7,
          maxw=c5 - c4 - 8)
     text(c5 + 3, y8 - 0.5 * gl_h, eff, size=6.6)
     text(c6 + 3, y8 - 0.5 * gl_h, exp, size=6.6)
     lrh = gl_h / 6.0
+    _limit_field = ["each_occurrence", "damage_rented", "med_expense",
+                    "personal_adv_injury", "general_aggregate",
+                    "products_aggregate"]
     for i, (lab, v) in enumerate(limits_gl):
         ry = y8 - (i + 1) * lrh
         hline(ry, c7, c8, 0.35)
+        # highlight a flagged limit cell in place
+        if _limit_field[i] in flagged_names:
+            _flag_box(c7 + 1, ry + 1, c8 - 1, ry + lrh - 1)
         tiny(c7 + 2, ry + 3, lab, maxw=1.42 * inch)
         c.setFont("Helvetica", 6.6)
-        c.drawRightString(c8 - 3, ry + 2.6, f"$ {v}" if v else "$")
+        if v:
+            c.drawRightString(c8 - 3, ry + 2.6, f"$ {v}")
+        elif _limit_field[i] in flagged_names:
+            c.setFillColorRGB(0.71, 0.14, 0.17)
+            c.drawRightString(c8 - 3, ry + 2.6, "$  !")
+            c.setFillColorRGB(0, 0, 0)
+        else:
+            c.drawRightString(c8 - 3, ry + 2.6, "$")
     hline(y9, w=0.5)
 
     # blank sections: Auto / Umbrella / Workers Comp
@@ -349,11 +417,40 @@ def render_acord25(path: str, fields: dict, receipts: list[dict],
 
     # ================= PAGE 2: provenance addendum =================
     c.showPage()
-    text(M, H - M - 10, "PROVENANCE ADDENDUM", size=11, bold=True)
-    text(M, H - M - 24,
-         "Every value on the certificate, with the source document and the "
-         "exact sentence that supports it.", size=8)
-    yy = H - M - 46
+    yy_top = H - M - 10
+    if held and flagged:
+        # Prominent held-fields callout box at the top of the addendum.
+        box_h = 0.32 * inch + len(flagged) * 0.20 * inch
+        c.setFillColorRGB(0.98, 0.92, 0.92)
+        c.rect(M, yy_top - box_h, IW, box_h, fill=1, stroke=0)
+        c.setStrokeColorRGB(0.71, 0.14, 0.17); c.setLineWidth(1.2)
+        c.rect(M, yy_top - box_h, IW, box_h, fill=0, stroke=1)
+        c.setFillColorRGB(0.71, 0.14, 0.17)
+        c.setFont("Helvetica-Bold", 10)
+        head = ("DOCUMENT BLOCKED — the following values could not be verified "
+                "against the policy:" if decision == "BLOCKED" else
+                "HELD FOR REVIEW — the following values could not be verified "
+                "against the policy:")
+        c.drawString(M + 8, yy_top - 16, head)
+        c.setFillColorRGB(0, 0, 0)
+        fy = yy_top - 32
+        for fl in flagged:
+            c.setFont("Helvetica-Bold", 8)
+            c.drawString(M + 14, fy, f"• {fl.get('label', fl.get('field',''))}")
+            c.setFont("Helvetica", 7.5)
+            reason = fl.get("reason", "not supported by the policy")
+            c.drawString(M + 150, fy, reason[:95])
+            fy -= 0.20 * inch
+        yy = yy_top - box_h - 20
+        text(M, yy, "PROVENANCE ADDENDUM", size=11, bold=True); yy -= 14
+        text(M, yy, "Every value that WAS placed on the certificate, with its "
+             "source and supporting sentence.", size=8); yy -= 22
+    else:
+        text(M, yy_top, "PROVENANCE ADDENDUM", size=11, bold=True)
+        text(M, yy_top - 14,
+             "Every value on the certificate, with the source document and the "
+             "exact sentence that supports it.", size=8)
+        yy = yy_top - 36
     for r in receipts:
         if yy < M + 40:
             c.showPage(); yy = H - M - 20
@@ -414,8 +511,11 @@ def _compose_ops(fields: dict) -> str:
     return " ".join(parts)
 
 
-def render_from_results(results, rules, path, issue_date=None):
-    """Engine FieldResult list + Rule list -> faithful ACORD-25 PDF."""
+def render_from_results(results, rules, path, issue_date=None,
+                        decision="READY_TO_SUBMIT", flagged=None):
+    """Engine FieldResult list + Rule list -> faithful ACORD-25 PDF. When
+    decision is not READY, a HELD/BLOCKED banner + flagged-field callout are
+    stamped so the output visibly shows it was not issued."""
     import hashlib
     from datetime import date as _d
     issue_date = issue_date or _d.today()
@@ -438,4 +538,5 @@ def render_from_results(results, rules, path, issue_date=None):
     seed = fields.get("policy_number", "") + fields.get("insured_name", "")
     cert_no = "CERT-%d-%s" % (issue_date.year,
                               hashlib.md5(seed.encode()).hexdigest()[:6].upper())
-    render_acord25(str(path), fields, receipts, warnings, issue_date, cert_no)
+    render_acord25(str(path), fields, receipts, warnings, issue_date, cert_no,
+                   decision=decision, flagged=flagged or [])

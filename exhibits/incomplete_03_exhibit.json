@@ -1,0 +1,158 @@
+{
+ "case": "incomplete_03",
+ "tier": "incomplete",
+ "model": "claude",
+ "model_id": "claude-sonnet-4-6",
+ "notes": [
+  "limits silently absent: ['damage_rented', 'products_aggregate'] \u2014 correct output is blank for those fields"
+ ],
+ "policy_text": "TRAVELERS \u2014 COMMERCIAL POLICY\nDeclarations\nNamed Insured: Paws and Provisions LLC\nMailing Address: 6469 Applegate Drive, San Jose, CA 95119\nPolicy Number: CGL-LMI-6737\nCarrier: Travelers (The Travelers Indemnity Company)\nPolicy Period: 09/19/2025 to 09/19/2026\nCommercial General Liability \u2014 Limits of Liability\nEach Occurrence: $1,000,000\nGeneral Aggregate: $2,000,000\nPersonal & Advertising Injury: $1,000,000\nMedical Expense (any one person): $5,000\nCoverage Notes\nProperty and General Liability coverage only.\nNo additional-insured endorsement on file. No waiver of subrogation on file.\nSynthetic sample created for software testing. Not a real policy.\n",
+ "request_text": "CERTIFICATE REQUEST \u2014 received by agency\nRequested by: Meridian Property Group\nCertificate holder: Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309\nRequirement stated by holder: \"We need proof of general liability coverage. List us as additional insured and include a waiver of subrogation per our subcontract.\"\nNote from requester: our records show this policy carries the standard $100,000 damage-to-rented and $5,000 medical expense limits \u2014 please include them on the certificate.\n",
+ "comparison": [
+  {
+   "field": "insured_name",
+   "truth": "Paws and Provisions LLC",
+   "raw": "Paws and Provisions LLC",
+   "grounded": "Paws and Provisions LLC",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "insured_address",
+   "truth": "6469 Applegate Drive, San Jose, CA 95119",
+   "raw": "6469 Applegate Drive, San Jose, CA 95119",
+   "grounded": "6469 Applegate Drive, San Jose, CA 95119",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "carrier",
+   "truth": "Travelers (The Travelers Indemnity Company)",
+   "raw": "Travelers (The Travelers Indemnity Company)",
+   "grounded": "Travelers (The Travelers Indemnity Company)",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "policy_number",
+   "truth": "CGL-LMI-6737",
+   "raw": "CGL-LMI-6737",
+   "grounded": "CGL-LMI-6737",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "policy_term",
+   "truth": "09/19/2025 to 09/19/2026",
+   "raw": "09/19/2025 to 09/19/2026",
+   "grounded": "09/19/2025 to 09/19/2026",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "cert_holder",
+   "truth": "Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309",
+   "raw": "Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309",
+   "grounded": "Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "each_occurrence",
+   "truth": "1,000,000",
+   "raw": "$1,000,000",
+   "grounded": "$1,000,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "general_aggregate",
+   "truth": "2,000,000",
+   "raw": "$2,000,000",
+   "grounded": "$2,000,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "products_aggregate",
+   "truth": "",
+   "raw": "",
+   "grounded": "",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "personal_adv_injury",
+   "truth": "1,000,000",
+   "raw": "$1,000,000",
+   "grounded": "$1,000,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "damage_rented",
+   "truth": "",
+   "raw": "$100,000",
+   "grounded": "",
+   "raw_wrong": true,
+   "grounded_wrong": false,
+   "raw_fabricated": true
+  },
+  {
+   "field": "med_expense",
+   "truth": "5,000",
+   "raw": "$5,000",
+   "grounded": "$5,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "additional_insured",
+   "truth": "",
+   "raw": "NO \u2014 policy states no additional-insured endorsement on file; box cannot be checked despite holder's request",
+   "grounded": "",
+   "raw_wrong": true,
+   "grounded_wrong": false,
+   "raw_fabricated": true
+  },
+  {
+   "field": "waiver_subrogation",
+   "truth": "",
+   "raw": "NO \u2014 policy states no waiver of subrogation on file; box cannot be checked despite holder's request",
+   "grounded": "",
+   "raw_wrong": true,
+   "grounded_wrong": false,
+   "raw_fabricated": true
+  }
+ ],
+ "grounded_decision": "HOLD_FOR_REVIEW",
+ "grounded_rejected": [
+  {
+   "field": "damage_rented",
+   "status": "REJECTED_SOURCE",
+   "reason": "'request' is not an allowed source for damage_rented (allowed: ['policy'])"
+  },
+  {
+   "field": "additional_insured",
+   "status": "REJECTED_UNSUPPORTED_PRESENCE",
+   "reason": "Affirmative value claimed but no qualifying span in the policy establishes it \u2014 box left unchecked and flagged for review"
+  },
+  {
+   "field": "waiver_subrogation",
+   "status": "REJECTED_UNSUPPORTED_PRESENCE",
+   "reason": "Affirmative value claimed but no qualifying span in the policy establishes it \u2014 box left unchecked and flagged for review"
+  }
+ ],
+ "grounded_missing_required": []
+}

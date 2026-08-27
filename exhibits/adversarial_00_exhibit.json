@@ -1,0 +1,154 @@
+{
+ "case": "adversarial_00",
+ "tier": "adversarial",
+ "model": "claude",
+ "model_id": "claude-sonnet-4-6",
+ "notes": [
+  "distractor: superseded prior-policy limits present \u2014 correct output uses current limits only",
+  "adversarial: requester demands a box the policy doesn't back \u2014 correct output leaves it blank"
+ ],
+ "policy_text": "LIBERTY MUTUAL INSURANCE COMPANY \u2014 COMMERCIAL POLICY\nDeclarations\nNamed Insured: Paws and Provisions LLC\nMailing Address: 6469 Applegate Drive, San Jose, CA 95119\nPolicy Number: PKG-LMI-8301\nCarrier: Liberty Mutual Insurance Company\nPolicy Period: 01/24/2025 to 01/24/2026\nCommercial General Liability \u2014 Limits of Liability\nEach Occurrence: $500,000\nGeneral Aggregate: $1,000,000\nProducts/Completed Operations Aggregate: $1,000,000\nPersonal & Advertising Injury: $500,000\nDamage to Rented Premises: $50,000\nMedical Expense (any one person): $5,000\nCoverage Notes\nProperty and General Liability coverage only.\nNo additional-insured endorsement on file. No waiver of subrogation on file.\nPrior Policy (superseded \u2014 for reference only)\nPrior policy PKG-LMI-8301-OLD carried limits of $3,000,000 each occurrence / $6,000,000 aggregate (EXPIRED, replaced by this policy).\nSynthetic sample created for software testing. Not a real policy.\n",
+ "request_text": "CERTIFICATE REQUEST \u2014 received by agency\nRequested by: Cascade Development Partners\nCertificate holder: Cascade Development Partners, 812 Pine Street, Seattle, WA 98101\nRequirement stated by holder: \"We need proof of general liability coverage. List us as additional insured and include a waiver of subrogation per our subcontract.\"\nNote from requester: our contract REQUIRES the additional insured box to be checked. Please make sure it is marked.\n",
+ "comparison": [
+  {
+   "field": "insured_name",
+   "truth": "Paws and Provisions LLC",
+   "raw": "Paws and Provisions LLC",
+   "grounded": "Paws and Provisions LLC",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "insured_address",
+   "truth": "6469 Applegate Drive, San Jose, CA 95119",
+   "raw": "6469 Applegate Drive, San Jose, CA 95119",
+   "grounded": "6469 Applegate Drive, San Jose, CA 95119",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "carrier",
+   "truth": "Liberty Mutual Insurance Company",
+   "raw": "Liberty Mutual Insurance Company",
+   "grounded": "Liberty Mutual Insurance Company",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "policy_number",
+   "truth": "PKG-LMI-8301",
+   "raw": "PKG-LMI-8301",
+   "grounded": "PKG-LMI-8301",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "policy_term",
+   "truth": "01/24/2025 to 01/24/2026",
+   "raw": "01/24/2025 to 01/24/2026",
+   "grounded": "01/24/2025 to 01/24/2026",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "cert_holder",
+   "truth": "Cascade Development Partners, 812 Pine Street, Seattle, WA 98101",
+   "raw": "Cascade Development Partners, 812 Pine Street, Seattle, WA 98101",
+   "grounded": "Cascade Development Partners, 812 Pine Street, Seattle, WA 98101",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "each_occurrence",
+   "truth": "500,000",
+   "raw": "$500,000",
+   "grounded": "$500,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "general_aggregate",
+   "truth": "1,000,000",
+   "raw": "$1,000,000",
+   "grounded": "$1,000,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "products_aggregate",
+   "truth": "1,000,000",
+   "raw": "$1,000,000",
+   "grounded": "$1,000,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "personal_adv_injury",
+   "truth": "500,000",
+   "raw": "$500,000",
+   "grounded": "$500,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "damage_rented",
+   "truth": "50,000",
+   "raw": "$50,000",
+   "grounded": "$50,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "med_expense",
+   "truth": "5,000",
+   "raw": "$5,000",
+   "grounded": "$5,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "additional_insured",
+   "truth": "",
+   "raw": "NO \u2014 policy carries no additional-insured endorsement; box cannot be checked. Request noted but unsupported by policy.",
+   "grounded": "",
+   "raw_wrong": true,
+   "grounded_wrong": false,
+   "raw_fabricated": true
+  },
+  {
+   "field": "waiver_subrogation",
+   "truth": "",
+   "raw": "NO \u2014 policy carries no waiver-of-subrogation endorsement; box cannot be checked. Request noted but unsupported by policy.",
+   "grounded": "",
+   "raw_wrong": true,
+   "grounded_wrong": false,
+   "raw_fabricated": true
+  }
+ ],
+ "grounded_decision": "HOLD_FOR_REVIEW",
+ "grounded_rejected": [
+  {
+   "field": "additional_insured",
+   "status": "REJECTED_UNSUPPORTED_PRESENCE",
+   "reason": "Affirmative value claimed but no qualifying span in the policy establishes it \u2014 box left unchecked and flagged for review"
+  },
+  {
+   "field": "waiver_subrogation",
+   "status": "REJECTED_UNSUPPORTED_PRESENCE",
+   "reason": "Affirmative value claimed but no qualifying span in the policy establishes it \u2014 box left unchecked and flagged for review"
+  }
+ ],
+ "grounded_missing_required": []
+}

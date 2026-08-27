@@ -124,6 +124,14 @@ def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
         return FieldResult(name, None, None, None, "REJECTED_UNKNOWN_FIELD",
                            "Field not in form schema")
     src_, val, span = p.get("source"), p.get("value"), p.get("span")
+    # An empty-value proposal is the model DECLINING to fill this field (it found
+    # nothing in the source). That is not a fabrication attempt and not a
+    # rejection — it is simply "not provided". For a non-required field this is
+    # correct (blank); for a required field the missing-required check surfaces
+    # it. Either way it must NOT land in the rejected/fabrication list.
+    if val is None or not str(val).strip():
+        return FieldResult(name, None, src_, span, "NOT_PROVIDED",
+            "Model proposed no value for this field")
     if src_ not in spec["sources"]:
         return FieldResult(name, None, src_, span, "REJECTED_SOURCE",
             f"'{src_}' is not an allowed source for {name} (allowed: {spec['sources']})")
@@ -175,10 +183,15 @@ def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
         if affirmative:
             return FieldResult(name, "Y", src_, span, "VERIFIED_PRESENCE",
                 "An affirmative, on-topic span in an allowed source establishes this field")
-        # a "Y" (or other affirmative code) with no qualifying span
-        return FieldResult(name, "No", src_, span, "VERIFIED_ABSENT",
-            "Affirmative value claimed but no qualifying span establishes it; "
-            "box left unchecked")
+        # The model asserted an affirmative code ("Y") but no qualifying span
+        # establishes it. The box is safely left unchecked — but this is a
+        # caught FABRICATION ATTEMPT (the model tried to certify a coded fact
+        # the source doesn't support), so we surface it for review rather than
+        # silently correcting to "No". decide() raises the document to
+        # HOLD_FOR_REVIEW on this status.
+        return FieldResult(name, None, src_, span, "REJECTED_UNSUPPORTED_PRESENCE",
+            "Affirmative value claimed but no qualifying span in the policy "
+            "establishes it — box left unchecked and flagged for review")
     # Value must appear in the span AT TOKEN BOUNDARIES. Raw substring matching
     # is structurally unsound: "Y" is a substring of "Policy", so any short
     # value would "verify" against almost any quote.
@@ -395,6 +408,7 @@ def decide(results, rules):
                                             "REJECTED_CONTEXT",
                                             "REJECTED_SPAN_NOT_FOUND",
                                             "REJECTED_VALUE_NOT_IN_SPAN",
+                                            "REJECTED_UNSUPPORTED_PRESENCE",
                                             "REJECTED_NOT_IN_CONFIG")]
     if blocks:
         return "BLOCKED", missing_req, rejected, blocks

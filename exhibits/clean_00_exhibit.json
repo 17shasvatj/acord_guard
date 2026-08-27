@@ -1,0 +1,151 @@
+{
+ "case": "clean_00",
+ "tier": "clean",
+ "model": "claude",
+ "model_id": "claude-sonnet-4-6",
+ "notes": [],
+ "policy_text": "LIBERTY MUTUAL INSURANCE COMPANY \u2014 COMMERCIAL POLICY\nDeclarations\nNamed Insured: Bluegrass Catering Co\nMailing Address: 88 Mercer Street, Louisville, KY 40202\nPolicy Number: PKG-HTF-6991\nCarrier: Liberty Mutual Insurance Company\nPolicy Period: 02/27/2025 to 02/27/2026\nCommercial General Liability \u2014 Limits of Liability\nEach Occurrence: $500,000\nGeneral Aggregate: $1,000,000\nProducts/Completed Operations Aggregate: $1,000,000\nPersonal & Advertising Injury: $500,000\nDamage to Rented Premises: $50,000\nMedical Expense (any one person): $5,000\nCoverage Notes\nProperty and General Liability coverage only.\nNo additional-insured endorsement on file. No waiver of subrogation on file.\nSynthetic sample created for software testing. Not a real policy.\n",
+ "request_text": "CERTIFICATE REQUEST \u2014 received by agency\nRequested by: Meridian Property Group\nCertificate holder: Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309\nRequirement stated by holder: \"We need proof of general liability coverage. List us as additional insured and include a waiver of subrogation per our subcontract.\"\n",
+ "comparison": [
+  {
+   "field": "insured_name",
+   "truth": "Bluegrass Catering Co",
+   "raw": "Bluegrass Catering Co",
+   "grounded": "Bluegrass Catering Co",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "insured_address",
+   "truth": "88 Mercer Street, Louisville, KY 40202",
+   "raw": "88 Mercer Street, Louisville, KY 40202",
+   "grounded": "88 Mercer Street, Louisville, KY 40202",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "carrier",
+   "truth": "Liberty Mutual Insurance Company",
+   "raw": "Liberty Mutual Insurance Company",
+   "grounded": "Liberty Mutual Insurance Company",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "policy_number",
+   "truth": "PKG-HTF-6991",
+   "raw": "PKG-HTF-6991",
+   "grounded": "PKG-HTF-6991",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "policy_term",
+   "truth": "02/27/2025 to 02/27/2026",
+   "raw": "02/27/2025 to 02/27/2026",
+   "grounded": "02/27/2025 to 02/27/2026",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "cert_holder",
+   "truth": "Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309",
+   "raw": "Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309",
+   "grounded": "Meridian Property Group, 1100 Peachtree St NE, Atlanta, GA 30309",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "each_occurrence",
+   "truth": "500,000",
+   "raw": "$500,000",
+   "grounded": "$500,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "general_aggregate",
+   "truth": "1,000,000",
+   "raw": "$1,000,000",
+   "grounded": "$1,000,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "products_aggregate",
+   "truth": "1,000,000",
+   "raw": "$1,000,000",
+   "grounded": "$1,000,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "personal_adv_injury",
+   "truth": "500,000",
+   "raw": "$500,000",
+   "grounded": "$500,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "damage_rented",
+   "truth": "50,000",
+   "raw": "$50,000",
+   "grounded": "$50,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "med_expense",
+   "truth": "5,000",
+   "raw": "$5,000",
+   "grounded": "$5,000",
+   "raw_wrong": false,
+   "grounded_wrong": false,
+   "raw_fabricated": false
+  },
+  {
+   "field": "additional_insured",
+   "truth": "",
+   "raw": "NO \u2014 policy states no additional-insured endorsement on file; requested by certificate holder but cannot be confirmed",
+   "grounded": "",
+   "raw_wrong": true,
+   "grounded_wrong": false,
+   "raw_fabricated": true
+  },
+  {
+   "field": "waiver_subrogation",
+   "truth": "",
+   "raw": "NO \u2014 policy states no waiver of subrogation on file; requested by certificate holder but cannot be confirmed",
+   "grounded": "",
+   "raw_wrong": true,
+   "grounded_wrong": false,
+   "raw_fabricated": true
+  }
+ ],
+ "grounded_decision": "HOLD_FOR_REVIEW",
+ "grounded_rejected": [
+  {
+   "field": "additional_insured",
+   "status": "REJECTED_UNSUPPORTED_PRESENCE",
+   "reason": "Affirmative value claimed but no qualifying span in the policy establishes it \u2014 box left unchecked and flagged for review"
+  },
+  {
+   "field": "waiver_subrogation",
+   "status": "REJECTED_UNSUPPORTED_PRESENCE",
+   "reason": "Affirmative value claimed but no qualifying span in the policy establishes it \u2014 box left unchecked and flagged for review"
+  }
+ ],
+ "grounded_missing_required": []
+}

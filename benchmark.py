@@ -57,8 +57,18 @@ waiver_subrogation are "Y" or "". Use "" for anything you cannot determine.
 
 
 def _norm(v: str) -> str:
-    v = (v or "").strip().casefold()
-    v = re.sub(r"[,$\s]", "", v)
+    v = (v or "").strip()
+    low = v.casefold()
+    # A value that AFFIRMATIVELY NEGATES — starts with no/none/not/n/a — is a
+    # correct "decline", semantically identical to a blank box. Models often
+    # write a verbose "NO — policy states no endorsement on file..." instead of
+    # a bare "No"; that is correct behavior, not a fabricated value, so it must
+    # normalize to "" like a bare No. We only match a NEGATION at the very start
+    # (optionally followed by punctuation/space) so we never turn a real value
+    # (a limit, a name, an affirmative "Y ...") into a blank.
+    if re.match(r"^(no|none|not|n/a|n\.a\.|nil|false)\b", low):
+        return ""
+    v = re.sub(r"[,$\s]", "", low)
     v = v.replace("through", "to").replace("–", "-").replace("—", "-")
     if v in ("y", "yes", "true"):
         v = "y"
@@ -73,13 +83,25 @@ def _read_policy_text(pdf_path: Path) -> str:
 
 
 # ---------------- arms ----------------
+def _load_agency_config():
+    """The agency's own settings (producer name/address/phone/code). Loaded from
+    data/agency_config.json so producer fields verify against real config rather
+    than spuriously rejecting. Falls back to empty if the file is absent."""
+    try:
+        from pathlib import Path
+        p = Path(__file__).parent / "data" / "agency_config.json"
+        return p.read_text()
+    except Exception:
+        return json.dumps({})
+
+
 def _extract_shared(model: str, policy_text: str, request_text: str,
                     model_name: str | None = None):
     """One extraction, shared by both arms. Both see the identical prompt and
     the identical proposals — the ONLY difference downstream is whether the
     verifier runs. This isolates the verifier's contribution."""
     sources = {"policy": policy_text, "request": request_text,
-               "config": json.dumps({})}
+               "config": _load_agency_config()}
     proposals, _ = extractor.extract(model, sources, model=model_name)
     return sources, proposals
 
