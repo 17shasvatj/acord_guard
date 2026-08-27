@@ -381,16 +381,26 @@ def decide(results, rules):
                    if spec["required"] and n not in filled]
     rejected = [r for r in results if r.status.startswith("REJECTED")]
     blocks = [r for r in rules if r.severity == "BLOCK" and not r.passed]
-    # A rejected ENDORSEMENT box (additional_insured / waiver_subrogation) must BLOCK,
-    # not silently drop: someone tried to certify a legal protection the policy doesn't
-    # support. Issuing a certificate that quietly omits a requested endorsement is the
-    # same "advise but ship" failure we reject — so we stop and flag it.
-    ENDORSEMENT_FIELDS = {"additional_insured", "waiver_subrogation"}
-    endorsement_rejects = [r for r in rejected if r.name in ENDORSEMENT_FIELDS]
+    # A CAUGHT FABRICATION must never be silently absorbed into a clean-looking
+    # document. When the model proposed an affirmative value that failed
+    # verification (unsourced, wrong-context, request-pressured, or an
+    # unsupported presence "Y"), the field is safely blank — but the *attempt*
+    # is a signal the input pushed the model toward asserting something the
+    # source doesn't support, and a human should see it. This is general, not
+    # an endorsement special-case: any rejected proposal that tried to assert a
+    # value (as opposed to a field simply never proposed) surfaces the document
+    # for review rather than shipping quietly.
+    fabrication_attempts = [r for r in rejected
+                            if r.status in ("REJECTED_SOURCE",
+                                            "REJECTED_CONTEXT",
+                                            "REJECTED_SPAN_NOT_FOUND",
+                                            "REJECTED_VALUE_NOT_IN_SPAN",
+                                            "REJECTED_NOT_IN_CONFIG")]
     if blocks:
         return "BLOCKED", missing_req, rejected, blocks
-    if endorsement_rejects:
-        return "BLOCKED", missing_req, rejected, blocks
+    if fabrication_attempts:
+        # caught a fabrication attempt: hold for human review, fields flagged
+        return "HOLD_FOR_REVIEW", missing_req, rejected, blocks
     if missing_req:
         return "HOLD_FOR_INFO", missing_req, rejected, blocks
     return "READY_TO_SUBMIT", missing_req, rejected, blocks

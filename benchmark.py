@@ -32,6 +32,7 @@ import engine
 import extractor
 
 BENCH = Path(__file__).parent / "bench"
+provider_map = {"claude": "opus", "gemini": "flash", "mock": "mock"}
 SCORED_FIELDS = ["insured_name", "insured_address", "carrier", "policy_number",
                  "policy_term", "cert_holder", "each_occurrence",
                  "general_aggregate", "products_aggregate",
@@ -156,7 +157,7 @@ def main():
     a = ap.parse_args()
     models = ["mock"] if a.mock else [m.strip() for m in a.models.split(",")]
     # map friendly names to extractor providers
-    provider = {"claude": "opus", "gemini": "flash", "mock": "mock"}
+    provider = provider_map
 
     truths = sorted((BENCH / "truth").glob("*.json"))
     if not truths:
