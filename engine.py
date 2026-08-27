@@ -118,13 +118,79 @@ def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
         return FieldResult(name, None, src_, span, "REJECTED_CONTEXT",
             f"Quote is real but sits in disqualified context ({disq}); "
             "not the operative value for this certificate")
-    if p.get("derived"):
+    # Value must appear in the span AT TOKEN BOUNDARIES. Raw substring matching
+    # is structurally unsound: "Y" is a substring of "Policy", so any short
+    # value would "verify" against almost any quote.
+    if _value_in_span(str(val), span):
+        return FieldResult(name, val, src_, span, "VERIFIED")
+    # The derived flag is NEVER trusted. A claimed normalization is admitted
+    # only if code can deterministically re-derive the value from the span's
+    # content (numeric equality after stripping currency formatting; date
+    # equality after parsing). The model asserts nothing; code checks
+    # everything — otherwise derived would be a trapdoor under the guarantee.
+    if _derivable(str(val), span):
         return FieldResult(name, val, src_, span, "VERIFIED_DERIVED",
-            "Value is a stated normalization of the verified quote")
-    if _norm(str(val)) not in _norm(span):
-        return FieldResult(name, None, src_, span, "REJECTED_VALUE_NOT_IN_SPAN",
-            f"Value '{val}' does not appear in the quoted text — mark derived=true only if it is a normalization")
-    return FieldResult(name, val, src_, span, "VERIFIED")
+            "Value re-derived from the quote by deterministic normalization")
+    return FieldResult(name, None, src_, span, "REJECTED_VALUE_NOT_IN_SPAN",
+        f"Value '{val}' does not appear in the quoted text and cannot be "
+        "deterministically derived from it")
+
+
+def _value_in_span(val: str, span: str) -> bool:
+    """Whole-token containment: the value must appear in the span bounded by
+    non-alphanumerics (or string edges), never as a fragment of a longer
+    token. Kills the substring hole where 'Y' matched the y in 'Policy'."""
+    v, s = _norm(val), _norm(span)
+    if not v:
+        return False
+    pat = r"(?<![a-z0-9])" + re.escape(v) + r"(?![a-z0-9])"
+    return re.search(pat, s) is not None
+
+
+_NUM_RE = re.compile(r"\d[\d,]*(?:\.\d+)?")
+_DATE_RES = (re.compile(r"(\d{1,2})/(\d{1,2})/(\d{4})"),
+             re.compile(r"(\d{4})-(\d{2})-(\d{2})"))
+
+
+def _numbers_in(text: str) -> set:
+    out = set()
+    for m in _NUM_RE.finditer(text):
+        try:
+            out.add(float(m.group(0).replace(",", "")))
+        except ValueError:
+            pass
+    return out
+
+
+def _dates_in(text: str) -> set:
+    out = set()
+    for m in _DATE_RES[0].finditer(text):
+        mth, d, y = m.groups()
+        out.add((int(y), int(mth), int(d)))
+    for m in _DATE_RES[1].finditer(text):
+        y, mth, d = m.groups()
+        out.add((int(y), int(mth), int(d)))
+    return out
+
+
+def _derivable(val: str, span: str) -> bool:
+    """Can code deterministically re-derive `val` from the span's content?
+    Admitted derivations only:
+      numeric — every number in the value equals a number in the span
+                (currency / comma formatting stripped)
+      date    — every date in the value equals a date in the span
+                (mm/dd/yyyy and yyyy-mm-dd parsed)
+    Anything code cannot recompute is not a derivation — it is an assertion,
+    and assertions are rejected."""
+    span_nums, span_dates = _numbers_in(span), _dates_in(span)
+    val_nums, val_dates = _numbers_in(val), _dates_in(val)
+    if not val_nums and not val_dates:
+        return False          # nothing checkable to derive
+    if val_nums and not val_nums.issubset(span_nums):
+        return False
+    if val_dates and not val_dates.issubset(span_dates):
+        return False
+    return True
 
 
 DISQUALIFYING_MARKERS = (
