@@ -277,6 +277,9 @@ const REJPLAIN = s => ({REJECTED_SPAN_NOT_FOUND:"the sentence it pointed to isn'
   REJECTED_VALUE_NOT_IN_SPAN:"the sentence is real, but this value isn't in it",
   REJECTED_NOT_IN_CONFIG:"that value isn't in the agency's settings",
   REJECTED_SOURCE:"that's not a document this value is allowed to come from",
+  REJECTED_UNSUPPORTED_PRESENCE:"it marked the box checked, but no policy line establishes the endorsement",
+  REJECTED_CONTEXT:"the sentence is real, but it sits in a superseded or reference-only section",
+  REJECTED_WRONG_FIELD:"the sentence it quoted is about a different field",
   REJECTED_UNKNOWN_FIELD:"that's not a field on this form",
   MISSING:"not found anywhere in the file"}[s] || s);
 
@@ -383,8 +386,14 @@ function handle(e){
         say("ok","✓",`<b>${label}</b>: ${e.value}<span class="q">from the agency's settings</span>`);
       else if(e.status==="MISSING")
         say("rej","—",`<b>${label}</b>: not found anywhere in the file — left blank, not guessed.`);
+      else if(e.status==="VERIFIED_PRESENCE")
+        say("ok","✓",`<b>${label}</b>: Y — the policy carries this endorsement.${e.quote?`<span class="q">backed by the policy: “${e.quote}”</span>`:""}`);
+      else if(e.status==="VERIFIED_ABSENT")
+        say("ok","✓",`<b>${label}</b>: left unchecked — the policy confirms this endorsement is not on file.${e.quote?`<span class="q">backed by the policy: “${e.quote}”</span>`:""}`);
+      else if(e.status==="NOT_PROVIDED")
+        say("rej","—",`<b>${label}</b>: no value offered — left blank, not guessed.`);
       else
-        say("rej","✗",`<b>${label}</b>: <b>rejected</b> — ${REJPLAIN(e.status)}.${e.quote?`<span class="q">it claimed: “${e.quote}”</span>`:""}`);
+        say("rej","✗",`<b>${label}</b>: <b>held for review</b> — ${REJPLAIN(e.status)}.${e.quote?`<span class="q">it claimed: “${e.quote}”</span>`:""}`);
       break;}
     case "rule":
       if(e.passed)say("ok","✓",`${RULEQ[e.name]||e.name} <b>Yes.</b><span class="q">${e.detail}</span>`);
