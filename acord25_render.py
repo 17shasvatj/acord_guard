@@ -264,17 +264,19 @@ def render_acord25(path: str, fields: dict, receipts: list[dict],
     text(c0 + 6, y8 - 0.5 * gl_h, "A", size=8)
     tiny(c1 + 3, y8 - 9, "COMMERCIAL GENERAL LIABILITY")
     # Coverage trigger (occurrence vs claims-made): mark ONLY the box the policy
-    # supports. If neither was verified from the source, both stay empty rather
-    # than assert an unverified form. Same discipline as every other field.
+    # supports. Match on CONTAINS, not equality, so natural model phrasing like
+    # "Occurrence", "occurrence form", "per policy" resolves correctly. If
+    # neither was verified from the source, both stay empty rather than assert an
+    # unverified form. Same discipline as every other field.
     trig = str(fields.get("coverage_trigger", "")).strip().casefold()
-    cm = "[X]" if trig == "claims-made" else "[ ]"
-    oc = "[X]" if trig == "occurrence" else "[ ]"
+    cm = "[X]" if "claims" in trig else "[ ]"
+    oc = "[X]" if "occurrence" in trig else "[ ]"
     tiny(c1 + 10, y8 - 20, f"{cm} CLAIMS-MADE   {oc} OCCUR")
-    # Aggregate basis (policy / project / loc): same rule.
+    # Aggregate basis (policy / project / loc): same rule, same contains-match.
     agg = str(fields.get("aggregate_basis", "")).strip().casefold()
-    ap = "[X]" if agg == "policy" else "[ ]"
-    apr = "[X]" if agg == "project" else "[ ]"
-    al = "[X]" if agg == "loc" else "[ ]"
+    ap = "[X]" if "policy" in agg else "[ ]"
+    apr = "[X]" if "project" in agg else "[ ]"
+    al = "[X]" if ("loc" in agg or "location" in agg) else "[ ]"
     tiny(c1 + 3, y9 + 12, "GEN'L AGGREGATE LIMIT APPLIES PER:")
     tiny(c1 + 10, y9 + 4, f"{ap} POLICY    {apr} PROJECT    {al} LOC")
     flagged_names = {f.get("field") for f in flagged} if held else set()

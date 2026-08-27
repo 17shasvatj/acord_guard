@@ -75,6 +75,12 @@ SCHEMA = {
     "producer_code":    {"required": False, "sources": ["config"]},  # NOT in config -> stays blank
 }
 
+# Dollar-limit fields: their certificate value must be a number, never a phrase.
+# A non-numeric proposal ("Not scheduled", "N/A") means the limit is absent and
+# the box must render blank. Derived from the schema so it stays in sync.
+_MONETARY_FIELDS = {"each_occurrence", "general_aggregate", "products_aggregate",
+                    "personal_adv_injury", "damage_rented", "med_expense"}
+
 # --------------------------- Source loading ---------------------------------
 def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip().casefold()
@@ -249,6 +255,13 @@ def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
             return FieldResult(name, None, src_, span, "REJECTED_WRONG_FIELD",
                 f"Quoted span does not name this field ({name}); the value may "
                 "have been taken from a different line of the policy")
+    # Monetary limit fields must carry an actual number. If the model proposed a
+    # non-numeric value like "Not scheduled" / "N/A" / "None" (the policy stating
+    # the limit is ABSENT), that is not a limit — it is an absence. Resolve to
+    # NOT_PROVIDED so the box renders BLANK, never literal words in a dollar cell.
+    if name in _MONETARY_FIELDS and not re.search(r"\d", str(val)):
+        return FieldResult(name, None, src_, span, "NOT_PROVIDED",
+            "Policy states this limit is not scheduled; box left blank")
     # Value must appear in the span AT TOKEN BOUNDARIES. Raw substring matching
     # is structurally unsound: "Y" is a substring of "Policy", so any short
     # value would "verify" against almost any quote.
