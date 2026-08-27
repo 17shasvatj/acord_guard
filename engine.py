@@ -420,15 +420,23 @@ def validate(results: list[FieldResult], notice_date: date, policy_text: str) ->
     rules = []
     term = _get(results, "policy_term")
     start, end = _parse_term(term)
-    # Rule 1: coverage in force on the certificate date (BLOCK if not).
+    # Rule 1: coverage in force on the certificate date.
     if start and end:
         ok = start <= notice_date <= end
-        # WARN, not BLOCK: certificates for expired/future policies are legitimate
-        # (historical proof of coverage). The issue date is just the generation date.
+        # WARN, not BLOCK: certificates for expired OR future-dated policies are
+        # legitimate (historical proof, or a binder for coverage about to start).
+        # The issue date is just the generation date. The message must say WHICH
+        # way it's out of force — "ended" and "not started" are opposite problems.
+        if ok:
+            note = ""
+        elif notice_date > end:
+            note = (" — policy period has ended; confirm this certificate is for "
+                    "historical documentation, not current proof of coverage")
+        else:  # notice_date < start
+            note = (" — policy period has not started yet; confirm this certificate "
+                    "is for a future/pending coverage term, not current proof of coverage")
         rules.append(Rule("coverage_in_force_on_cert_date", "WARN", ok,
-            f"Certificate issued {notice_date}; policy term {start}–{end}"
-            + ("" if ok else " — policy period has ended; confirm this certificate is for "
-               "historical documentation, not current proof of coverage")))
+            f"Certificate issued {notice_date}; policy term {start}–{end}" + note))
     else:
         problems = "policy term not captured" if not term else f"policy term unparseable: '{term}'"
         rules.append(Rule("coverage_in_force_on_cert_date", "WARN", False,
