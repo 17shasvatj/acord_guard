@@ -61,7 +61,7 @@
   .panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
   .banner{padding:14px 18px;color:#fff;font-weight:700;font-size:16px}
   .banner.READY_TO_SUBMIT{background:var(--green)} .banner.BLOCKED{background:var(--red)}
-  .banner.HOLD_FOR_INFO{background:var(--amber)} .banner.idle{background:#8a94a3}
+  .banner.HOLD_FOR_INFO{background:var(--amber)} .banner.HOLD_FOR_REVIEW{background:var(--amber)} .banner.idle{background:#8a94a3}
   .panel .body{padding:16px;font-size:14px}
   .pdfbtn{display:inline-block;margin-top:12px;background:var(--navy);color:#fff;text-decoration:none;
     padding:9px 16px;border-radius:8px;font-size:14px;font-weight:600}
@@ -392,10 +392,12 @@ function handle(e){
     case "decision":{
       banner.className="banner "+e.status;
       banner.textContent={READY_TO_SUBMIT:"READY TO SEND",BLOCKED:"STOPPED — DO NOT SEND",
-        HOLD_FOR_INFO:"ON HOLD — INFORMATION MISSING"}[e.status];
+        HOLD_FOR_REVIEW:"HELD FOR REVIEW",
+        HOLD_FOR_INFO:"ON HOLD — INFORMATION MISSING"}[e.status]||e.status;
       let s={READY_TO_SUBMIT:"Every value on this form traces to the policy, and every check passed.",
         BLOCKED:"This document failed a check that matters — it will not be sent.",
-        HOLD_FOR_INFO:"Required information is missing. Instead of guessing, the system asks:"}[e.status];
+        HOLD_FOR_REVIEW:"A value could not be traced to the policy, so it was withheld and the document was held for a person to review.",
+        HOLD_FOR_INFO:"Required information is missing. Instead of guessing, the system asks:"}[e.status]||"";
       if(e.missing_required.length)s+=` <b>${e.missing_required.map(f=>FIELD[f]||f).join(", ")}</b> — a question for the caller.`;
       if(e.rejected.length)s+=`<br>Suggestions rejected as unsupported: <b>${e.rejected.map(f=>FIELD[f]||f).join(", ")}</b>.`;
       summary.innerHTML=s+`<br><span class="note">${e.via==="live"?"live model run":"saved run (labeled)"} · ${e.elapsed_ms} ms</span>`;

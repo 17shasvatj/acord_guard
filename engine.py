@@ -124,6 +124,21 @@ def _presence_affirms(field: str, span: str, spec: dict) -> bool:
     return True
 
 
+def _presence_negates(field: str, span: str, spec: dict) -> bool:
+    """True iff the span is ON-TOPIC for this presence field AND negates it —
+    e.g. "No additional-insured endorsement on file". This means the source has
+    affirmatively established that the endorsement is ABSENT, which settles the
+    box as "No" and issues clean. Distinct from a span that is merely silent on
+    the field (no evidence terms present), which cannot settle anything."""
+    s = " " + re.sub(r"\s+", " ", span).casefold() + " "
+    evidence = [e.casefold() for e in spec.get("evidence", [])]
+    if not evidence or not any(e in s for e in evidence):
+        return False   # not on-topic — can't settle the question either way
+    NEGATORS = (" no ", " not ", " without ", " none ", " excluded ",
+                " does not ", " n/a ", " absent ", " nil ", " not on file ")
+    return any(neg in s for neg in NEGATORS)
+
+
 def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
     """Verify a single proposal. Ordered gauntlet; early return = no fall-through."""
     name = p["field"]
@@ -191,12 +206,19 @@ def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
         if affirmative:
             return FieldResult(name, "Y", src_, span, "VERIFIED_PRESENCE",
                 "An affirmative, on-topic span in an allowed source establishes this field")
-        # The model asserted an affirmative code ("Y") but no qualifying span
-        # establishes it. The box is safely left unchecked — but this is a
-        # caught FABRICATION ATTEMPT (the model tried to certify a coded fact
-        # the source doesn't support), so we surface it for review rather than
-        # silently correcting to "No". decide() raises the document to
-        # HOLD_FOR_REVIEW on this status.
+        # The span is ON-TOPIC for this field but NEGATES it (e.g. the policy
+        # says "No additional-insured endorsement on file"). The source itself
+        # has settled the question: the endorsement is absent. Resolve to a clean
+        # "No" and ISSUE — even if the model clumsily paired this negation span
+        # with a "Y" value. There is nothing to review: the policy plainly
+        # states the fact is absent, so this is not a fabrication attempt.
+        if _presence_negates(name, span, spec):
+            return FieldResult(name, "No", src_, span, "VERIFIED_ABSENT",
+                "Policy explicitly states this endorsement is absent; box left "
+                "unchecked")
+        # The model asserted an affirmative code ("Y") with a span that is
+        # SILENT on this field — no support either way. This is a genuine
+        # unsupported claim: box left unchecked and surfaced for review.
         return FieldResult(name, None, src_, span, "REJECTED_UNSUPPORTED_PRESENCE",
             "Affirmative value claimed but no qualifying span in the policy "
             "establishes it — box left unchecked and flagged for review")
