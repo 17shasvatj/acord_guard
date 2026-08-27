@@ -56,7 +56,7 @@
   .msg{padding:8px 16px;border-bottom:1px solid #f0f2f5;font-size:14px;display:flex;gap:10px}
   .msg .ico{flex-shrink:0;width:20px;text-align:center;font-weight:700}
   .msg.ok .ico{color:var(--green)} .msg.rej .ico{color:var(--red)}
-  .msg.info .ico{color:var(--navy)} .msg.ops .ico{color:var(--amber)}
+  .msg.info .ico{color:var(--navy)} .msg.ops .ico{color:var(--amber)} .msg.warn .ico{color:var(--amber)}
   .msg .q{display:block;color:var(--grey);font-size:12.5px;margin-top:2px;font-style:italic}
   .panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
   .banner{padding:14px 18px;color:#fff;font-weight:700;font-size:16px}
@@ -326,7 +326,7 @@ function say(cls,ico,html){const d=document.createElement("div");d.className="ms
 document.getElementById("go").onclick=async()=>{
   stream.innerHTML="";links.innerHTML="";
   summary.textContent="Working…";banner.className="banner idle";banner.textContent="Running…";
-  const btn=document.getElementById("go");btn.disabled=true;
+  const btn=document.getElementById("go");btn.disabled=true;window._warns=[];
   const fd=new FormData();fd.append("mode",mode);fd.append("tier",tier);
   fd.append("scenario", mode==="upload" ? "clean" : document.getElementById("scenario").value);
   if(mode==="upload"){const f=document.getElementById("decfile").files[0];
@@ -397,20 +397,26 @@ function handle(e){
       break;}
     case "rule":
       if(e.passed)say("ok","✓",`${RULEQ[e.name]||e.name} <b>Yes.</b><span class="q">${e.detail}</span>`);
+      else if(e.severity==="WARN"){window._warns=(window._warns||[]);window._warns.push(e.detail);say("warn","⚠",`${RULEQ[e.name]||e.name} <b>Heads up.</b><span class="q">${e.detail}</span>`);}
       else say("rej","✗",`${RULEQ[e.name]||e.name} <b>No.</b><span class="q">${e.detail}</span>`);break;
     case "decision":{
-      banner.className="banner "+e.status;
-      banner.textContent={READY_TO_SUBMIT:"READY TO SEND",BLOCKED:"STOPPED — DO NOT SEND",
+      const warns=(window._warns||[]);
+      const readyWarn = e.status==="READY_TO_SUBMIT" && warns.length;
+      banner.className="banner "+(readyWarn?"HOLD_FOR_INFO":e.status);
+      banner.textContent=(readyWarn?"READY — WITH WARNINGS":({READY_TO_SUBMIT:"READY TO SEND",BLOCKED:"STOPPED — DO NOT SEND",
         HOLD_FOR_REVIEW:"HELD FOR REVIEW",
-        HOLD_FOR_INFO:"ON HOLD — INFORMATION MISSING"}[e.status]||e.status;
-      let s={READY_TO_SUBMIT:"Every value on this form traces to the policy, and every check passed.",
+        HOLD_FOR_INFO:"ON HOLD — INFORMATION MISSING"}[e.status]||e.status));
+      let s=(readyWarn?"Every value traces to the policy, but a desk-level check needs your attention before sending:":
+        ({READY_TO_SUBMIT:"Every value on this form traces to the policy, and every check passed.",
         BLOCKED:"This document failed a check that matters — it will not be sent.",
         HOLD_FOR_REVIEW:"A value could not be traced to the policy, so it was withheld and the document was held for a person to review.",
-        HOLD_FOR_INFO:"Required information is missing. Instead of guessing, the system asks:"}[e.status]||"";
+        HOLD_FOR_INFO:"Required information is missing. Instead of guessing, the system asks:"}[e.status]||""));
+      if(readyWarn)s+=` <b>${warns.join(" ")}</b>`;
       if(e.missing_required.length)s+=` <b>${e.missing_required.map(f=>FIELD[f]||f).join(", ")}</b> — a question for the caller.`;
       if(e.rejected.length)s+=`<br>Suggestions rejected as unsupported: <b>${e.rejected.map(f=>FIELD[f]||f).join(", ")}</b>.`;
       summary.innerHTML=s+`<br><span class="note">${e.via==="live"?"live model run":"saved run (labeled)"} · ${e.elapsed_ms} ms</span>`;
       links.innerHTML=`<a class="pdfbtn" href="${API}${e.exhibit}" target="_blank">Open the finished document ↗</a>`;
+      window._warns=[];
       say("info","■",`Decision: <b>${banner.textContent}</b>.`);break;}
   }
 }

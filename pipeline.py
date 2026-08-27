@@ -45,7 +45,13 @@ def write_outputs(results, rules, status, tag: str):
     mpath.write_text(json.dumps(manifest, indent=2))
     fpath = OUT / f"certificate_{tag}.pdf"
     import acord25_render
-    acord25_render.render_from_results(results, rules, str(fpath), NOTICE_DATE)
+    # Fields the verifier could not support (rejected proposals) — these drive the
+    # HELD banner + in-place highlighting so a held document VISIBLY shows what
+    # was flagged, instead of rendering like a clean, issuable certificate.
+    flagged = [{"field": r.name, "reason": r.reason}
+               for r in results if r.status.startswith("REJECTED")]
+    acord25_render.render_from_results(results, rules, str(fpath), NOTICE_DATE,
+                                       decision=status, flagged=flagged)
     print(f"\nWrote: {fpath.name}, {mpath.name}")
     return fpath, mpath
 
