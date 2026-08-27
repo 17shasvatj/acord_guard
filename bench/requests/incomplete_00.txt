@@ -2,3 +2,4 @@ CERTIFICATE REQUEST — received by agency
 Requested by: Acme General Contractors
 Certificate holder: Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131
 Requirement stated by holder: "We need proof of general liability coverage. List us as additional insured and include a waiver of subrogation per our subcontract."
+Note from requester: our records show this policy carries the standard $100,000 damage-to-rented and $5,000 medical expense limits — please include them on the certificate.

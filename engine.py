@@ -108,6 +108,16 @@ def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
     if _norm(span) not in _norm(sources[src_]):
         return FieldResult(name, None, src_, span, "REJECTED_SPAN_NOT_FOUND",
             f"Quoted text does not exist in '{src_}'")
+    # Section-aware check: a quote can EXIST in the source yet come from text
+    # that does not govern the certificate — a superseded prior policy, a
+    # "for reference only" block, an expired term, an example. Span-verification
+    # alone would admit these (the quote is real), so we reject a span whose
+    # surrounding context is disqualifying.
+    disq = _disqualified_context(span, sources[src_])
+    if disq:
+        return FieldResult(name, None, src_, span, "REJECTED_CONTEXT",
+            f"Quote is real but sits in disqualified context ({disq}); "
+            "not the operative value for this certificate")
     if p.get("derived"):
         return FieldResult(name, val, src_, span, "VERIFIED_DERIVED",
             "Value is a stated normalization of the verified quote")
@@ -115,6 +125,33 @@ def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
         return FieldResult(name, None, src_, span, "REJECTED_VALUE_NOT_IN_SPAN",
             f"Value '{val}' does not appear in the quoted text — mark derived=true only if it is a normalization")
     return FieldResult(name, val, src_, span, "VERIFIED")
+
+
+DISQUALIFYING_MARKERS = (
+    "prior policy", "superseded", "for reference only", "reference only",
+    "expired", "replaced by", "does not apply", "not covered", "example only",
+    "sample only", "formerly", "previous policy", "old policy",
+)
+
+
+def _disqualified_context(span: str, source: str, window: int = 240):
+    """If the span sits inside a region governed by a disqualifying marker
+    (a superseded / prior / reference block), return the marker; else None.
+    Catches values quoted from e.g. 'Prior Policy (superseded — for reference
+    only)' blocks: the quote is genuinely present but does not govern the
+    certificate. Span-verification alone would admit these."""
+    s_norm = re.sub(r"\s+", " ", source).casefold()
+    span_norm = re.sub(r"\s+", " ", span).casefold()
+    idx = s_norm.find(span_norm)
+    if idx < 0:
+        return None
+    start = max(0, idx - window)
+    preceding = s_norm[start:idx + len(span_norm)]
+    for marker in DISQUALIFYING_MARKERS:
+        if marker in preceding:
+            return marker
+    return None
+
 
 def verify_proposals(proposals: list[dict], sources: dict) -> list[FieldResult]:
     """The invention-killer. A proposed field survives only if:

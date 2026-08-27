@@ -1,4 +1,4 @@
 CERTIFICATE REQUEST — received by agency
-Requested by: Acme General Contractors
-Certificate holder: Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131
+Requested by: Cascade Development Partners
+Certificate holder: Cascade Development Partners, 812 Pine Street, Seattle, WA 98101
 Requirement stated by holder: "We need proof of general liability coverage. List us as additional insured and include a waiver of subrogation per our subcontract."

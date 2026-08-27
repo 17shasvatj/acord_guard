@@ -72,11 +72,19 @@ def _read_policy_text(pdf_path: Path) -> str:
 
 
 # ---------------- arms ----------------
-def run_grounded(model: str, policy_text: str, request_text: str,
-                 model_name: str | None = None) -> dict:
+def _extract_shared(model: str, policy_text: str, request_text: str,
+                    model_name: str | None = None):
+    """One extraction, shared by both arms. Both see the identical prompt and
+    the identical proposals — the ONLY difference downstream is whether the
+    verifier runs. This isolates the verifier's contribution."""
     sources = {"policy": policy_text, "request": request_text,
                "config": json.dumps({})}
     proposals, _ = extractor.extract(model, sources, model=model_name)
+    return sources, proposals
+
+
+def arm_grounded(sources, proposals) -> dict:
+    """Verifier ENFORCED: unsourced / disqualified values are dropped."""
     results = engine.verify_proposals(proposals, sources)
     out = {f: "" for f in SCORED_FIELDS}
     for r in results:
@@ -85,18 +93,15 @@ def run_grounded(model: str, policy_text: str, request_text: str,
     return out
 
 
-def run_raw(model: str, policy_text: str, request_text: str,
-            model_name: str | None = None) -> dict:
-    prompt = RAW_PROMPT.format(fields=json.dumps(SCORED_FIELDS),
-                               policy=policy_text, request=request_text)
-    if model == "gemini":
-        text = extractor.call_flash(prompt, model_name or extractor.DEFAULT_MODELS["flash"])
-    else:
-        text = extractor.call_opus(prompt, model_name or extractor.DEFAULT_MODELS["opus"])
-    text = re.sub(r"```json|```", "", text).strip()
-    m = re.search(r"\{.*\}", text, re.S)
-    data = json.loads(m.group(0)) if m else {}
-    return {f: str(data.get(f, "") or "") for f in SCORED_FIELDS}
+def arm_raw(sources, proposals) -> dict:
+    """Verifier IGNORED: every proposed value is kept as-is (the naive
+    'trust the model' baseline). Same prompt, same proposals as grounded."""
+    out = {f: "" for f in SCORED_FIELDS}
+    for p in proposals:
+        f = p.get("field")
+        if f in out and p.get("value") not in (None, ""):
+            out[f] = str(p.get("value"))
+    return out
 
 
 def run_mock(kind: str, truth: dict, rng: random.Random) -> dict:
@@ -164,20 +169,30 @@ def main():
         policy_text = _read_policy_text(BENCH / "policies" / f"{cid}.pdf")
         request_text = (BENCH / "requests" / f"{cid}.txt").read_text()
         for model in models:
-            for arm in ("grounded", "raw"):
-                for run_i in range(a.runs):
+            for run_i in range(a.runs):
+                mdl = (a.claude_model if model == "claude"
+                       else a.gemini_model)
+                # ONE extraction per run, shared by both arms (same prompt,
+                # same proposals). Only the verifier differs.
+                shared = None
+                if not a.mock:
+                    try:
+                        shared = _extract_shared(provider[model], policy_text,
+                                                 request_text, mdl)
+                    except Exception as e:
+                        for arm in ("grounded", "raw"):
+                            rows.append(dict(id=cid, tier=tier, model=model,
+                                             arm=arm, run=run_i, error=str(e)))
+                            print(f"{cid} {model}/{arm} run{run_i}: ERROR {e}")
+                        continue
+                for arm in ("grounded", "raw"):
                     try:
                         if a.mock:
                             out = run_mock(arm, tf, rng)
                         elif arm == "grounded":
-                            mdl = (a.claude_model if model == "claude"
-                                   else a.gemini_model)
-                            out = run_grounded(provider[model], policy_text,
-                                               request_text, mdl)
+                            out = arm_grounded(*shared)
                         else:
-                            mdl = (a.claude_model if model == "claude"
-                                   else a.gemini_model)
-                            out = run_raw(model, policy_text, request_text, mdl)
+                            out = arm_raw(*shared)
                         s = score(out, tf)
                         rows.append(dict(id=cid, tier=tier, model=model,
                                          arm=arm, run=run_i, **s))

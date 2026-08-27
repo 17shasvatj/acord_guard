@@ -12,6 +12,15 @@ addendum: one receipt per value (source + exact supporting sentence).
 """
 from __future__ import annotations
 from datetime import date
+
+# --- Python 3.8 compatibility shim for reportlab's md5(usedforsecurity=...) ---
+import hashlib as _hashlib
+_orig_md5 = _hashlib.md5
+def _md5_compat(*a, **k):
+    k.pop("usedforsecurity", None)
+    return _orig_md5(*a, **k)
+_hashlib.md5 = _md5_compat
+
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas

@@ -2,22 +2,22 @@
  "id": "incomplete_00",
  "tier": "incomplete",
  "fields": {
-  "insured_name": "Summit Electrical Services Inc",
-  "insured_address": "610 Alder Road, Boise, ID 83702",
+  "insured_name": "Harbor Point Landscaping",
+  "insured_address": "75 Quarry Lane, Portsmouth, NH 03801",
   "carrier": "CNA (Continental Casualty Company)",
-  "policy_number": "CGL-ZUR-7233",
-  "policy_term": "12/14/2026 to 12/14/2027",
+  "policy_number": "BOP-CNA-1976",
+  "policy_term": "09/23/2025 to 09/23/2026",
   "cert_holder": "Acme General Contractors, 500 Biscayne Blvd, Miami, FL 33131",
   "additional_insured": "",
   "waiver_subrogation": "",
-  "each_occurrence": "",
-  "general_aggregate": "",
+  "each_occurrence": "2,000,000",
+  "general_aggregate": "4,000,000",
   "products_aggregate": "",
-  "personal_adv_injury": "",
-  "damage_rented": "",
+  "personal_adv_injury": "2,000,000",
+  "damage_rented": "300,000",
   "med_expense": ""
  },
  "notes": [
-  "limits absent from source \u2014 correct output is blank"
+  "limits silently absent: ['products_aggregate', 'med_expense'] \u2014 correct output is blank for those fields"
  ]
 }
