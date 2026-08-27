@@ -102,26 +102,25 @@
   <span class="step">STEP 1 — BACKGROUND</span>
   <span class="step-sub">The situation, and the documents the AI is given to work from.</span>
   <h2>The client file</h2>
-  <p class="lead">A small insurance agency (Bayline Insurance Services) and its records for one commercial customer, Paws and Provisions LLC.
-     Everything the AI is allowed to use comes from the customer's policy, the request it's answering,
+  <p class="lead">An insurance agency (Bayline Insurance Services) generating a certificate for a commercial customer.
+     Everything the AI is allowed to use comes from the customer's policy you upload, the request it's answering,
      and the agency's own settings — the three sources below. Nothing else.</p>
   <div class="cards">
     <div class="card">
       <h3>The customer's insurance policy (the “declarations page”)</h3>
       <p>The official summary of a business's coverage: which protections they carry, the dollar
          <b>limits</b> (the most the insurer will pay), and <b>from when until when</b> the coverage runs.
-         This policy carries general-liability coverage — but <b>no add-ons (“endorsements”) that would
-         extend that coverage to anyone else</b>, and no cyber coverage.</p>
-      <div class="doc-btns"><a id="polDoc" target="_blank">View the policy ↗</a></div>
+         You upload this as a PDF below — the layer reads it for every value it puts on the certificate,
+         including whether the policy carries the <b>endorsements</b> needed to extend coverage to anyone else.</p>
+      <div class="doc-btns"><a id="polDoc" target="_blank" style="display:none">View the policy ↗</a></div>
     </div>
     <div class="card">
       <h3>A certificate request</h3>
-      <p>A general contractor, Acme, won't let Paws and Provisions work on its site without proof of
-         insurance. Acme asks for a <b>certificate</b> — and wants to be named as “additional insured”
+      <p>A general contractor won't let the business work on its site without proof of
+         insurance. It asks for a <b>certificate</b> — and wants to be named as “additional insured”
          with a “waiver of subrogation,” two legal protections that only exist if the policy actually
-         carries the matching endorsements. <b>This one doesn't.</b> Hold onto that — it's the exact
-         thing the stress test at the end puts to the test.</p>
-      <div class="doc-btns"><a id="reqDoc" target="_blank">Read the request ↗</a></div>
+         carries the matching endorsements. Whether the uploaded policy does is exactly what the layer checks.</p>
+      <div class="doc-btns"><a id="reqDoc" target="_blank" style="display:none">Read the request ↗</a></div>
     </div>
     <div class="card">
       <h3>The agency's own settings</h3>
@@ -171,51 +170,19 @@
   <p class="note" style="margin-bottom:14px">The source documents the demo runs on:
      <a id="dlPol" target="_blank">the policy ↗</a> &nbsp;·&nbsp; <a id="dlReq" target="_blank">the certificate request ↗</a></p>
 
-  <div class="controls" >
-    <div class="fld"><label>Input</label>
-      <div class="seg" id="mode">
-        <button data-m="scenario" class="on">Use our test file</button>
-        <button data-m="upload">Upload your own policy</button>
-      </div>
-    </div>
-    <div class="fld" id="uploadFld" style="display:none">
-      <label>Your declarations page (PDF, text-based)</label>
+  <div class="controls">
+    <div class="fld"><label>Your declarations page (PDF, text-based)</label>
       <input type="file" id="decfile" accept="application/pdf"/></div>
-  </div>
-  <div class="controls" style="padding-top:12px;border-top:1px dashed var(--line)">
-    <div class="fld" id="situationFld"><label>Which situation?</label>
-      <select id="scenario">
-        <option value="clean" selected>The policy on file</option>
-        <option value="expired">The expired policy</option>
-        <option value="fabrication">Stress test — fabricated values forced in</option>
-      </select>
-    </div>
-    <div class="fld"><label>How to run it</label>
-      <div class="seg" id="tier">
-        <button data-t="opus" class="on">Live (Opus 5)</button>
-        <button data-t="recorded">Saved run (instant, no API)</button>
-      </div>
-    </div>
-    <button class="go" id="go">Run it</button>
+    <button class="go" id="go">Generate certificate</button>
   </div>
 
-  <p class="note" id="uploadNote" style="display:none">Your policy replaces the sample; the certificate request stays fixed. The model reads <b>your</b> policy for the coverage dates, limits, carrier, and — crucially — whether the endorsements exist to support the requested boxes. If the PDF is a scan with no text layer,
+  <p class="note" id="uploadNote">The model reads <b>your</b> policy for the coverage dates, limits, carrier, and — crucially — whether the endorsements exist to support the requested boxes. The certificate request stays fixed (it asks for additional-insured and waiver-of-subrogation status). If the PDF is a scan with no text layer,
      you'll see every field come back “not found” — that's the layer refusing to guess on something it can't read,
      not a bug.</p>
 
-  <div id="scenDesc" class="scenario-frame" style="margin-top:14px"></div>
-
-  <div id="redteamNote" class="scenario-frame" style="display:none;border-left-color:var(--red)">
-    <h4 style="color:var(--red)">The stress test — answering Acme's request the hard way</h4>
-    <p style="margin:0">Back in Step 1, Acme asked to be named additional insured with a waiver of subrogation —
-       and this policy carries neither endorsement. So what stops a certificate from claiming them anyway? This run
-       finds out. It <b>bypasses the AI entirely</b> and force-feeds the checker the values a careless system might
-       produce: those two endorsement boxes checked <b>“yes,”</b> with no endorsement on the policy to back them.
-       The question is simply <b>“can a value the policy doesn't support get onto the certificate?”</b>
-       Watch each one get blocked below — the endorsement boxes on the specific grounds that
-       <i>the policy carries no such endorsement, so it cannot be certified.</i> That is the protection Acme's
-       request needed, enforced by code instead of left to the model's judgment.</p>
-  </div>
+  <div id="scenDesc" class="scenario-frame" style="margin-top:14px;display:none"></div>
+  <div id="situationFld" style="display:none"><select id="scenario"><option value="clean" selected></option></select></div>
+  <div id="redteamNote" style="display:none"></div>
 
   <div class="runwrap">
     <div class="stream" id="stream">
@@ -229,9 +196,7 @@
       </div>
     </div>
   </div>
-  <p class="note">The two live options call the real models with the file above. “Saved run” replays a
-     recorded real run and needs no API — it's also what the system automatically falls back to (clearly
-     labeled) if a live model call fails mid-run. Server hiccups (Google 503s) are shown, not hidden.</p>
+  <p class="note">Upload a text-based PDF declarations page and the live model (Opus 5) proposes the certificate values; the verification layer checks each one against your policy before anything is issued. Server hiccups are shown, not hidden.</p>
 </div></section>
 
 <!-- STEP 4 -->
@@ -283,38 +248,10 @@ const REJPLAIN = s => ({REJECTED_SPAN_NOT_FOUND:"the sentence it pointed to isn'
   REJECTED_UNKNOWN_FIELD:"that's not a field on this form",
   MISSING:"not found anywhere in the file"}[s] || s);
 
-let tier="opus", mode="scenario";
-const scenSel=document.getElementById("scenario");
-const SCEN_DESC = {
-  "clean": "<b>The policy on file — a clean certificate.</b> Coverage is active and every value on the "
-    +"certificate traces back to a real line in the policy. Nothing is missing, nothing is invented, so the layer "
-    +"<b>approves it</b>. This is the case that shows the layer says yes to a valid certificate — it isn't just a "
-    +"machine that blocks things.",
-  "expired": "<b>The expired policy.</b> Coverage ended 01/22/2026; the certificate is issued today. "
-    +"Certificates for lapsed policies are legitimate — they document historical coverage — so the layer "
-    +"<b>issues</b> the certificate but attaches a prominent <b>warning</b>: the policy period has ended, "
-    +"confirm this is for historical documentation rather than current proof of coverage. The dates on the "
-    +"face are the policy's real dates, verified against the source.",
-  "fabrication": "<b>The stress test.</b> The AI is bypassed and the checker is force-fed the values a careless "
-    +"system might produce — the additional-insured and waiver boxes marked “yes” with no endorsement on the policy "
-    +"to back them. Each is "
-    +"caught and the certificate <b>blocked</b>. This proves the guarantee holds even against values a careless "
-    +"system might produce."};
-function renderScenDesc(){document.getElementById("scenDesc").innerHTML = SCEN_DESC[scenSel.value] || "";}
-function toggleRedteam(){document.getElementById("redteamNote").style.display =
-  scenSel.value==="fabrication" ? "block" : "none";}
-scenSel.addEventListener("change", ()=>{toggleRedteam();renderScenDesc();});
-toggleRedteam(); renderScenDesc();
-document.querySelectorAll("#tier button").forEach(b=>b.onclick=()=>{tier=b.dataset.t;
-  document.querySelectorAll("#tier button").forEach(x=>x.classList.remove("on"));b.classList.add("on");});
-document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{mode=b.dataset.m;
-  document.querySelectorAll("#mode button").forEach(x=>x.classList.remove("on"));b.classList.add("on");
-  document.getElementById("uploadFld").style.display = mode==="upload"?"flex":"none";
-  document.getElementById("uploadNote").style.display = mode==="upload"?"block":"none";
-  document.getElementById("situationFld").style.display = mode==="upload"?"none":"block";
-  document.getElementById("scenDesc").style.display = mode==="upload"?"none":"block";
-  document.getElementById("redteamNote").style.display =
-    (mode!=="upload" && document.getElementById("scenario").value==="fabrication")?"block":"none";});
+let tier="opus", mode="upload";   // upload is the only path
+// (Prebuilt scenario selector, tier toggle, and stress-test note removed —
+//  the demo is now upload-your-own-policy only. Hidden stub elements remain in
+//  the DOM so the streaming handlers that reference them stay safe.)
 
 const stream=document.getElementById("stream"),banner=document.getElementById("banner"),
   summary=document.getElementById("summary"),links=document.getElementById("links");
