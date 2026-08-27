@@ -48,6 +48,18 @@ SCHEMA = {
                                          "fire damage"]},
     "med_expense":      {"required": False, "sources": ["policy"],
                          "label_terms": ["medical expense", "med exp"]},
+    # Structural form fields — the coverage trigger and aggregate basis. These
+    # are NOT hardcoded on the certificate; the model must propose them with a
+    # policy quote, and the box is marked only from a verified value. If the
+    # policy doesn't state them, they stay blank like any other unsourced field.
+    "coverage_trigger": {"required": False, "sources": ["policy"],
+                         "label_terms": ["occurrence form", "claims-made",
+                                         "claims made", "occurrence basis",
+                                         "written on an occurrence",
+                                         "occurrence trigger", "coverage trigger"]},
+    "aggregate_basis":  {"required": False, "sources": ["policy"],
+                         "label_terms": ["aggregate", "per policy", "per project",
+                                         "per location"]},
     # Coded "presence" fields: rendered Y iff a qualifying span exists in an
     # allowed source. The model proves presence with a real span; code decides.
     # This is a general field KIND, not an endorsement special-case — any
