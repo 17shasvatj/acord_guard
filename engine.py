@@ -40,9 +40,18 @@ SCHEMA = {
     "personal_adv_injury":{"required": False,"sources": ["policy"]},
     "damage_rented":    {"required": False, "sources": ["policy"]},
     "med_expense":      {"required": False, "sources": ["policy"]},
-    # The two dangerous boxes: only "Y" if an endorsement is on the policy.
-    "additional_insured":{"required": False,"sources": ["policy"]},
-    "waiver_subrogation":{"required": False,"sources": ["policy"]},
+    # Coded "presence" fields: rendered Y iff a qualifying span exists in an
+    # allowed source. The model proves presence with a real span; code decides.
+    # This is a general field KIND, not an endorsement special-case — any
+    # boolean/checkbox certificate field uses it.
+    "additional_insured":{"required": False,"sources": ["policy"],
+                          "kind": "presence",
+                          "evidence": ["additional insured", "additional-insured",
+                                       "cg 20 10", "cg2010"]},
+    "waiver_subrogation":{"required": False,"sources": ["policy"],
+                          "kind": "presence",
+                          "evidence": ["waiver of subrogation", "waiver",
+                                       "subrogation", "cg 24 04", "cg2404"]},
     "producer_code":    {"required": False, "sources": ["config"]},  # NOT in config -> stays blank
 }
 
@@ -83,6 +92,30 @@ class FieldResult:
     status: str          # VERIFIED | REJECTED_* | MISSING | CONFIG | REQUEST
     reason: str = ""
 
+def _presence_affirms(field: str, span: str, spec: dict) -> bool:
+    """True iff the span AFFIRMATIVELY establishes this presence field's fact.
+    Two conditions, both required:
+      on-topic    — the span mentions this field's evidence term(s), declared in
+                    the schema ("evidence" list). This is domain data about what
+                    proves the fact, the same kind of declaration as a field's
+                    allowed sources — not a code special-case.
+      affirmative — the span is not a negation of that fact.
+    A field with no declared evidence terms cannot be affirmed by prose and
+    stays unchecked (fails safe)."""
+    s = " " + re.sub(r"\s+", " ", span).casefold() + " "
+    evidence = [e.casefold() for e in spec.get("evidence", [])]
+    if not evidence:
+        return False
+    on_topic = any(e in s for e in evidence)
+    if not on_topic:
+        return False
+    NEGATORS = (" no ", " not ", " without ", " none ", " excluded ",
+                " does not ", " n/a ", " absent ", " nil ", " not on file ")
+    if any(neg in s for neg in NEGATORS):
+        return False
+    return True
+
+
 def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
     """Verify a single proposal. Ordered gauntlet; early return = no fall-through."""
     name = p["field"]
@@ -118,6 +151,34 @@ def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
         return FieldResult(name, None, src_, span, "REJECTED_CONTEXT",
             f"Quote is real but sits in disqualified context ({disq}); "
             "not the operative value for this certificate")
+    # Presence fields (checkboxes / Y-N codes): the certificate value is a code
+    # standing for "a qualifying fact is established in the source." We do not
+    # literal-match the code ("Y" never appears verbatim in prose); instead the
+    # field resolves to affirmative BECAUSE a real, operative span in an allowed
+    # source establishes it. The model proved the fact with a span; code decided
+    # the span was real, operative, and from an allowed source. A request-only
+    # "Y" cannot reach here — REJECTED_SOURCE already blocked it, since presence
+    # fields allow only the policy as a source. This is a general field kind,
+    # not an endorsement special-case.
+    if spec.get("kind") == "presence":
+        # A presence (checkbox) field has three correct resolutions:
+        #   Y      -> the span AFFIRMATIVELY establishes the fact and is on-topic
+        #   blank  -> the fact is absent (value is "No", or the span negates it):
+        #             a correct negative, NOT a rejection, must not block
+        #   reject -> "Y" asserted with no qualifying span (a fabrication attempt)
+        v = _norm(str(val))
+        affirmative = _presence_affirms(name, span, spec)
+        if v in ("", "n", "no", "false", "none"):
+            # correct negative — the box is simply not checked
+            return FieldResult(name, "No", src_, span, "VERIFIED_ABSENT",
+                "Source does not establish this coded fact; box left unchecked")
+        if affirmative:
+            return FieldResult(name, "Y", src_, span, "VERIFIED_PRESENCE",
+                "An affirmative, on-topic span in an allowed source establishes this field")
+        # a "Y" (or other affirmative code) with no qualifying span
+        return FieldResult(name, "No", src_, span, "VERIFIED_ABSENT",
+            "Affirmative value claimed but no qualifying span establishes it; "
+            "box left unchecked")
     # Value must appear in the span AT TOKEN BOUNDARIES. Raw substring matching
     # is structurally unsound: "Y" is a substring of "Policy", so any short
     # value would "verify" against almost any quote.
