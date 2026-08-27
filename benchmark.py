@@ -25,7 +25,7 @@ Usage:
 Outputs: bench/results.json, bench/report.md
 """
 from __future__ import annotations
-import argparse, json, random, re
+import argparse, json, random, re, time
 from pathlib import Path
 
 import engine
@@ -172,6 +172,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--models", default="claude")
     ap.add_argument("--runs", type=int, default=3)
+    ap.add_argument("--sleep", type=float, default=0.0,
+                    help="seconds to pause before each extraction (use ~15 for Gemini free tier)")
     ap.add_argument("--mock", action="store_true")
     ap.add_argument("--claude-model", default="claude-sonnet-4-6",
                     help="Anthropic model for both arms (sonnet is ~10x cheaper than opus)")
@@ -199,6 +201,8 @@ def main():
                 # same proposals). Only the verifier differs.
                 shared = None
                 if not a.mock:
+                    if a.sleep:
+                        time.sleep(a.sleep)
                     try:
                         shared = _extract_shared(provider[model], policy_text,
                                                  request_text, mdl)

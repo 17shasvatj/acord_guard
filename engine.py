@@ -34,12 +34,20 @@ SCHEMA = {
     "policy_number":    {"required": True,  "sources": ["policy"]},
     "policy_term":      {"required": True,  "sources": ["policy"]},
     "cert_holder":      {"required": True,  "sources": ["request"]},
-    "each_occurrence":  {"required": True,  "sources": ["policy"]},
-    "general_aggregate":{"required": True,  "sources": ["policy"]},
-    "products_aggregate":{"required": False, "sources": ["policy"]},
-    "personal_adv_injury":{"required": False,"sources": ["policy"]},
-    "damage_rented":    {"required": False, "sources": ["policy"]},
-    "med_expense":      {"required": False, "sources": ["policy"]},
+    "each_occurrence":  {"required": True,  "sources": ["policy"],
+                         "label_terms": ["each occurrence"]},
+    "general_aggregate":{"required": True,  "sources": ["policy"],
+                         "label_terms": ["general aggregate"]},
+    "products_aggregate":{"required": False, "sources": ["policy"],
+                         "label_terms": ["products", "completed operations",
+                                         "comp/op"]},
+    "personal_adv_injury":{"required": False,"sources": ["policy"],
+                         "label_terms": ["personal", "advertising", "adv injury"]},
+    "damage_rented":    {"required": False, "sources": ["policy"],
+                         "label_terms": ["damage to rented", "rented premises",
+                                         "fire damage"]},
+    "med_expense":      {"required": False, "sources": ["policy"],
+                         "label_terms": ["medical expense", "med exp"]},
     # Coded "presence" fields: rendered Y iff a qualifying span exists in an
     # allowed source. The model proves presence with a real span; code decides.
     # This is a general field KIND, not an endorsement special-case — any
@@ -192,6 +200,21 @@ def _verify_one(p: dict, cfg: dict, sources: dict) -> FieldResult:
         return FieldResult(name, None, src_, span, "REJECTED_UNSUPPORTED_PRESENCE",
             "Affirmative value claimed but no qualifying span in the policy "
             "establishes it — box left unchecked and flagged for review")
+    # Field-correspondence: for fields that name a specific labeled line in the
+    # source (the coverage limits), the span must actually contain that field's
+    # label — not merely the right number. This closes wrong-field citation,
+    # where the model fills an absent limit by quoting a DIFFERENT limit's line
+    # that happens to carry a plausible number (e.g. citing "Each Occurrence:
+    # $1,000,000" as the span for Damage to Rented). Span-presence proves the
+    # value came from the source; the label proves it came from the RIGHT line.
+    # label_terms is schema data, not per-field code.
+    label_terms = spec.get("label_terms")
+    if label_terms:
+        span_l = " " + re.sub(r"\s+", " ", span).casefold() + " "
+        if not any(t in span_l for t in label_terms):
+            return FieldResult(name, None, src_, span, "REJECTED_WRONG_FIELD",
+                f"Quoted span does not name this field ({name}); the value may "
+                "have been taken from a different line of the policy")
     # Value must appear in the span AT TOKEN BOUNDARIES. Raw substring matching
     # is structurally unsound: "Y" is a substring of "Policy", so any short
     # value would "verify" against almost any quote.
@@ -408,6 +431,7 @@ def decide(results, rules):
                                             "REJECTED_CONTEXT",
                                             "REJECTED_SPAN_NOT_FOUND",
                                             "REJECTED_VALUE_NOT_IN_SPAN",
+                                            "REJECTED_WRONG_FIELD",
                                             "REJECTED_UNSUPPORTED_PRESENCE",
                                             "REJECTED_NOT_IN_CONFIG")]
     if blocks:
