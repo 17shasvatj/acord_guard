@@ -31,6 +31,8 @@ SCHEMA = {
     "insured_name":     {"required": True,  "sources": ["policy"]},
     "insured_address":  {"required": True,  "sources": ["policy"]},
     "carrier":          {"required": True,  "sources": ["policy"]},
+    "carrier_naic":     {"required": False, "sources": ["policy"],
+                         "label_terms": ["naic"]},
     "policy_number":    {"required": True,  "sources": ["policy"]},
     "policy_term":      {"required": True,  "sources": ["policy"]},
     "cert_holder":      {"required": True,  "sources": ["request"]},

@@ -324,7 +324,10 @@ def render_acord25(path: str, fields: dict, receipts: list[dict],
         tiny(c7 + 2, ry + 3, lab, maxw=1.42 * inch)
         c.setFont("Helvetica", 6.6)
         if v:
-            c.drawRightString(c8 - 3, ry + 2.6, f"$ {v}")
+            # The template already prints the "$" label, so strip any leading "$"
+            # the value carries to avoid a doubled "$ $1,000,000".
+            vv = str(v).lstrip().lstrip("$").lstrip()
+            c.drawRightString(c8 - 3, ry + 2.6, f"$ {vv}")
         elif _limit_field[i] in flagged_names:
             c.setFillColorRGB(0.71, 0.14, 0.17)
             c.drawRightString(c8 - 3, ry + 2.6, "$  !")
