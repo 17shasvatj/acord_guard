@@ -39,7 +39,6 @@
   .badcard{border-top:4px solid var(--red)} .goodcard{border-top:4px solid var(--green)}
   .tagline{font-size:12px;font-weight:700;letter-spacing:.4px;margin-bottom:6px}
   .badcard .tagline{color:var(--red)} .goodcard .tagline{color:var(--green)}
-  /* runner */
   .controls{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin:18px 0}
   .fld{display:flex;flex-direction:column;gap:5px}
   .fld label{font-size:12px;font-weight:600;color:var(--grey)}
@@ -70,19 +69,9 @@
     font-family:var(--mono);font-size:12.5px;line-height:1.55;position:relative;margin:8px 0}
   .prompt .plabel{display:block;color:#7fa7c9;font-size:10.5px;text-transform:uppercase;
     letter-spacing:.6px;margin-bottom:6px;font-family:inherit}
-  .matrix{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px;background:#fff}
-  .matrix th{background:#eef2f7;padding:7px 9px;text-align:left;font-size:11px;
-    text-transform:uppercase;letter-spacing:.4px}
-  .matrix td{padding:7px 9px;border-bottom:1px solid #f0f2f5;vertical-align:top}
-  .cell{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
-  .cell.fail{background:#fdecea;color:var(--red)} .cell.pass{background:#e7f4ec;color:var(--green)}
-  .cell.part{background:#fbf3d9;color:var(--amber)} .cell.nt{background:#eef1f5;color:var(--grey)}
   .scenario-frame{background:#fff;border:1px solid var(--line);border-left:4px solid var(--navy);
     border-radius:10px;padding:16px 18px;margin-bottom:18px}
   .scenario-frame h4{margin:0 0 8px;font-size:14px;color:var(--navy)}
-  .scenario-frame .ask{background:#f6f8fa;border-radius:7px;padding:10px 12px;font-size:13.5px;margin:8px 0}
-  .scenario-frame ul{margin:8px 0 0;padding-left:18px;font-size:13.5px}
-  .scenario-frame li{margin:3px 0}
   .step{font-size:15px;font-weight:800;letter-spacing:.5px;padding:5px 16px}
   .step-sub{display:block;font-size:14px;color:var(--grey);font-weight:400;margin:6px 0 2px;letter-spacing:0;text-transform:none}
   footer{padding:26px 0;color:var(--grey);font-size:13px}
@@ -97,7 +86,6 @@
      what can go wrong, and a verification layer you can run yourself, live.</p>
 </div></header>
 
-<!-- STEP 1: BACKGROUND -->
 <section><div class="wrap">
   <span class="step">STEP 1 — BACKGROUND</span>
   <span class="step-sub">The situation, and the documents the AI is given to work from.</span>
@@ -107,20 +95,18 @@
      and the agency's own settings — the three sources below. Nothing else.</p>
   <div class="cards">
     <div class="card">
-      <h3>The customer's insurance policy (the “declarations page”)</h3>
+      <h3>The customer's insurance policy (the &ldquo;declarations page&rdquo;)</h3>
       <p>The official summary of a business's coverage: which protections they carry, the dollar
          <b>limits</b> (the most the insurer will pay), and <b>from when until when</b> the coverage runs.
          You upload this as a PDF below — the layer reads it for every value it puts on the certificate,
          including whether the policy carries the <b>endorsements</b> needed to extend coverage to anyone else.</p>
-      <div class="doc-btns"><a id="polDoc" target="_blank" style="display:none">View the policy ↗</a></div>
     </div>
     <div class="card">
       <h3>A certificate request</h3>
       <p>A general contractor won't let the business work on its site without proof of
-         insurance. It asks for a <b>certificate</b> — and wants to be named as “additional insured”
-         with a “waiver of subrogation,” two legal protections that only exist if the policy actually
+         insurance. It asks for a <b>certificate</b> — and wants to be named as &ldquo;additional insured&rdquo;
+         with a &ldquo;waiver of subrogation,&rdquo; two legal protections that only exist if the policy actually
          carries the matching endorsements. Whether the uploaded policy does is exactly what the layer checks.</p>
-      <div class="doc-btns"><a id="reqDoc" target="_blank" style="display:none">Read the request ↗</a></div>
     </div>
     <div class="card">
       <h3>The agency's own settings</h3>
@@ -135,7 +121,6 @@
      is wrong, the party relying on it is exposed, and the agency that issued it is liable.</p>
 </div></section>
 
-<!-- STEP 2: THE PROBLEM -->
 <section><div class="wrap">
   <span class="step">STEP 2 — WHY GROUNDING MATTERS</span>
   <span class="step-sub">The structural gap in AI-generated documents.</span>
@@ -157,7 +142,6 @@
   </div>
 </div></section>
 
-<!-- STEP 3: RUN THE GUARD -->
 <section><div class="wrap">
   <span class="step">STEP 3 — THE DEMO</span>
   <span class="step-sub">The verification layer, running live. This is the part to try.</span>
@@ -175,7 +159,7 @@
   </div>
 
   <p class="note" id="uploadNote">The model reads <b>your</b> policy for the coverage dates, limits, carrier, and — crucially — whether the endorsements exist to support the requested boxes. The certificate request stays fixed (it asks for additional-insured and waiver-of-subrogation status). If the PDF is a scan with no text layer,
-     you'll see every field come back “not found” — that's the layer refusing to guess on something it can't read,
+     you'll see every field come back &ldquo;not found&rdquo; — that's the layer refusing to guess on something it can't read,
      not a bug.</p>
 
   <div id="scenDesc" class="scenario-frame" style="margin-top:14px;display:none"></div>
@@ -184,7 +168,7 @@
 
   <div class="runwrap">
     <div class="stream" id="stream">
-      <div class="msg info"><span class="ico">·</span><span>Press <b>Run it</b>. Every step will be narrated here.</span></div>
+      <div class="msg info"><span class="ico">·</span><span>Choose a PDF and press <b>Generate certificate</b>. Every step will be narrated here.</span></div>
     </div>
     <div class="panel">
       <div class="banner idle" id="banner">Waiting</div>
@@ -197,7 +181,6 @@
   <p class="note">Upload a text-based PDF declarations page and the live model (Opus 5) proposes the certificate values; the verification layer checks each one against your policy before anything is issued. Server hiccups are shown, not hidden.</p>
 </div></section>
 
-<!-- STEP 4 -->
 <section><div class="wrap">
   <span class="step">WHY IT MATTERS</span>
   <span class="step-sub">Where this fits with what you've already built.</span>
@@ -211,18 +194,15 @@
 </div></section>
 
 <footer><div class="wrap">
-  Prototype · all client data is synthetic, created for testing · form is an ACORD-1 layout reproduction
+  Prototype · all client data is synthetic, created for testing · form is an ACORD-25 layout reproduction
   <span id="apinote"></span>
 </div></footer>
 
 <script>
-// DEPLOY: replace the placeholder with your Render backend URL before deploying the frontend.
-//   e.g. const API_BASE = "https://acord-guard-api.onrender.com";
 const API_BASE = "https://acord-guard.onrender.com";   // <-- CHANGE THIS FOR DEPLOY
 const API = localStorage.getItem("ACORD_API") || API_BASE;
-document.getElementById("apinote").textContent = " · backend: " + API;
-for (const [id,path] of [["polDoc","/corpus/policy-inforce"],["reqDoc","/corpus/request"],["dlPol","/corpus/policy-inforce"],["dlReq","/corpus/request"]])
-  document.getElementById(id).href = API + path;
+const apinote = document.getElementById("apinote");
+if (apinote) apinote.textContent = " · backend: " + API;
 
 const FIELD = {producer_name:"Producer (agency)",producer_address:"Producer address",producer_phone:"Producer phone",
   insured_name:"Named insured",insured_address:"Insured address",carrier:"Insurer",policy_number:"Policy number",
@@ -247,9 +227,6 @@ const REJPLAIN = s => ({REJECTED_SPAN_NOT_FOUND:"the sentence it pointed to isn'
   MISSING:"not found anywhere in the file"}[s] || s);
 
 let tier="opus", mode="upload";   // upload is the only path
-// (Prebuilt scenario selector, tier toggle, and stress-test note removed —
-//  the demo is now upload-your-own-policy only. Hidden stub elements remain in
-//  the DOM so the streaming handlers that reference them stay safe.)
 
 const stream=document.getElementById("stream"),banner=document.getElementById("banner"),
   summary=document.getElementById("summary"),links=document.getElementById("links");
@@ -262,32 +239,27 @@ document.getElementById("go").onclick=async()=>{
   stream.innerHTML="";links.innerHTML="";
   summary.textContent="Working…";banner.className="banner idle";banner.textContent="Running…";
   const btn=document.getElementById("go");btn.disabled=true;window._warns=[];
-  const fd=new FormData();fd.append("mode",mode);fd.append("tier",tier);
-  fd.append("scenario", mode==="upload" ? "clean" : document.getElementById("scenario").value);
-  if(mode==="upload"){const f=document.getElementById("decfile").files[0];
-    if(!f){alert("Choose a PDF declarations page first.");document.getElementById("go").disabled=false;return;}
-    fd.append("dec_page",f);}
+  const fd=new FormData();fd.append("mode",mode);fd.append("tier",tier);fd.append("scenario","clean");
+  const f=document.getElementById("decfile").files[0];
+  if(!f){alert("Choose a PDF declarations page first.");btn.disabled=false;
+    banner.className="banner idle";banner.textContent="Waiting";summary.textContent="The finished certificate and the decision will appear here.";return;}
+  fd.append("dec_page",f);
   try{
     const resp=await fetch(API+"/run",{method:"POST",body:fd});
     if(!resp.ok){say("rej","✗","Couldn't start: HTTP "+resp.status);btn.disabled=false;return;}
     const reader=resp.body.getReader(),dec=new TextDecoder();let buf="";
     while(true){const {value,done}=await reader.read();if(done)break;
       buf+=dec.decode(value,{stream:true});let i;
-      while((i=buf.indexOf("\n\n"))>=0){const f=buf.slice(0,i);buf=buf.slice(i+2);
-        if(f.startsWith("data:"))handle(JSON.parse(f.slice(5)));}}
-  }catch(e){say("rej","✗","Connection error: "+e.message);}
+      while((i=buf.indexOf("\n\n"))>=0){const fr=buf.slice(0,i);buf=buf.slice(i+2);
+        if(fr.startsWith("data:"))handle(JSON.parse(fr.slice(5)));}}
+  }catch(e){say("rej","✗","Connection error: "+e.message+" — if this is the first run in a while, the server may be waking up; wait ~30s and try again.");}
   btn.disabled=false;
 };
 
 function handle(e){
   switch(e.type){
     case "start":
-      if(e.scenario==="fabrication" && e.mode!=="upload")
-        say("info","▶",`<b>Stress test:</b> the AI is bypassed. Force-feeding the checker the values a careless system might produce — the additional-insured and waiver boxes Acme asked for, marked “yes” with no endorsement on the policy to back them. Each should be blocked below.`);
-      else
-        say("info","▶", e.mode==="upload"
-             ? `Reading <b>your uploaded policy</b> — <b>Opus 5</b> proposes the values, the layer checks each one.`
-             : `Running the <b>${e.scenario}</b> situation — <b>${e.tier==="recorded"?"saved run":"Opus 5"}</b> proposes the values.`);break;
+      say("info","▶",`Reading <b>your uploaded policy</b> — <b>Opus 5</b> proposes the values, the layer checks each one.`);break;
     case "sources":
       say("info","📁","Opened the client file: the customer's policy, the certificate request, and the agency's settings.");break;
     case "ops":
@@ -300,35 +272,28 @@ function handle(e){
                          : "COULDN'T COMPLETE";
       if(e.detail) say("rej","·",`<span class="mini" style="color:var(--grey)">details: ${e.detail}</span>`);
       say("rej","✗",`<b>${e.message}</b>`);
-      summary.innerHTML=`<b>The live model couldn't be reached.</b> Press Run to try again, or choose <b>Saved run</b> to see the process on a recorded run.`;
-      break;
-    case "injected":
-      say("rej","⚠",`<b>Force-feeding the checker ${e.items.length} fabricated values:</b>`);
-      e.items.forEach(it=>say("rej","▸",
-        `<b>${FIELD[it.field]||it.field}: ${it.value}</b><span class="q">${it.why}</span>`));
-      say("info","·",`<span class="mini">Now running every one through the checker — each should be caught.</span>`);
+      summary.innerHTML=`<b>Couldn't complete this run.</b> If the PDF is a scan with no text layer, try a text-based PDF. Otherwise press Generate certificate to try again.`;
       break;
     case "proposals_received":
-      if(document.getElementById("scenario").value==="fabrication") break; // already narrated via 'injected'
-      say("info","💡",`<b>${e.model}</b> suggested <b>${e.count}</b> values for the form${e.via!=="live"?" <i>(replayed from a saved real run)</i>":""}. Now checking each one against the file…`);break;
+      say("info","💡",`<b>${e.model}</b> suggested <b>${e.count}</b> values for the form. Now checking each one against the file…`);break;
     case "verdict":{
       const label=FIELD[e.field]||e.field, src=SRC[e.source]||e.source;
       if(e.status==="VERIFIED")
-        say("ok","✓",`<b>${label}</b>: ${e.value}<span class="q">backed by ${src}: “${e.quote}”</span>`);
+        say("ok","✓",`<b>${label}</b>: ${e.value}<span class="q">backed by ${src}: &ldquo;${e.quote}&rdquo;</span>`);
       else if(e.status==="VERIFIED_DERIVED")
-        say("ok","✓",`<b>${label}</b>: ${e.value}<span class="q">restated from ${src}: “${e.quote}”</span>`);
+        say("ok","✓",`<b>${label}</b>: ${e.value}<span class="q">restated from ${src}: &ldquo;${e.quote}&rdquo;</span>`);
       else if(e.status==="CONFIG")
         say("ok","✓",`<b>${label}</b>: ${e.value}<span class="q">from the agency's settings</span>`);
       else if(e.status==="MISSING")
         say("rej","—",`<b>${label}</b>: not found anywhere in the file — left blank, not guessed.`);
       else if(e.status==="VERIFIED_PRESENCE")
-        say("ok","✓",`<b>${label}</b>: Y — the policy carries this endorsement.${e.quote?`<span class="q">backed by the policy: “${e.quote}”</span>`:""}`);
+        say("ok","✓",`<b>${label}</b>: Y — the policy carries this endorsement.${e.quote?`<span class="q">backed by the policy: &ldquo;${e.quote}&rdquo;</span>`:""}`);
       else if(e.status==="VERIFIED_ABSENT")
-        say("ok","✓",`<b>${label}</b>: left unchecked — the policy confirms this endorsement is not on file.${e.quote?`<span class="q">backed by the policy: “${e.quote}”</span>`:""}`);
+        say("ok","✓",`<b>${label}</b>: left unchecked — the policy confirms this endorsement is not on file.${e.quote?`<span class="q">backed by the policy: &ldquo;${e.quote}&rdquo;</span>`:""}`);
       else if(e.status==="NOT_PROVIDED")
         say("rej","—",`<b>${label}</b>: no value offered — left blank, not guessed.`);
       else
-        say("rej","✗",`<b>${label}</b>: <b>held for review</b> — ${REJPLAIN(e.status)}.${e.quote?`<span class="q">it claimed: “${e.quote}”</span>`:""}`);
+        say("rej","✗",`<b>${label}</b>: <b>held for review</b> — ${REJPLAIN(e.status)}.${e.quote?`<span class="q">it claimed: &ldquo;${e.quote}&rdquo;</span>`:""}`);
       break;}
     case "rule":
       if(e.passed)say("ok","✓",`${RULEQ[e.name]||e.name} <b>Yes.</b><span class="q">${e.detail}</span>`);
@@ -347,15 +312,14 @@ function handle(e){
         HOLD_FOR_REVIEW:"A value could not be traced to the policy, so it was withheld and the document was held for a person to review.",
         HOLD_FOR_INFO:"Required information is missing. Instead of guessing, the system asks:"}[e.status]||""));
       if(readyWarn)s+=` <b>${warns.join(" ")}</b>`;
-      if(e.missing_required.length)s+=` <b>${e.missing_required.map(f=>FIELD[f]||f).join(", ")}</b> — a question for the caller.`;
-      if(e.rejected.length)s+=`<br>Suggestions rejected as unsupported: <b>${e.rejected.map(f=>FIELD[f]||f).join(", ")}</b>.`;
-      summary.innerHTML=s+`<br><span class="note">${e.via==="live"?"live model run":"saved run (labeled)"} · ${e.elapsed_ms} ms</span>`;
+      if(e.missing_required && e.missing_required.length)s+=` <b>${e.missing_required.map(f=>FIELD[f]||f).join(", ")}</b> — a question for the caller.`;
+      if(e.rejected && e.rejected.length)s+=`<br>Suggestions rejected as unsupported: <b>${e.rejected.map(f=>FIELD[f]||f).join(", ")}</b>.`;
+      summary.innerHTML=s+`<br><span class="note">live model run · ${e.elapsed_ms} ms</span>`;
       links.innerHTML=`<a class="pdfbtn" href="${API}${e.exhibit}" target="_blank">Open the finished document ↗</a>`;
       window._warns=[];
       say("info","■",`Decision: <b>${banner.textContent}</b>.`);break;}
   }
 }
-
 </script>
 </body>
 </html>
